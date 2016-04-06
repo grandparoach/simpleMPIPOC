@@ -1,0 +1,491 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01-preview/deploymentTemplate.json",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "PremiumStorageAccountName": {
+      "type": "string",
+      "defaultValue": "mtdpremiumsa",
+      "metadata": {
+        "description": "This is the name of the Premium Storage Account to be used for building the NFS Server."
+      }
+    },
+    "StandardStorageAccountName": {
+      "type": "string",
+      "defaultValue": "mtdstandardsa",
+      "metadata": {
+        "description": "This is the name of the Standard Storage Account to be used for the OS Disks for the VM's."
+      }
+    },
+    "virtualNetworkName": {
+      "type": "string",
+      "defaultValue": "AZ-VNet",
+      "metadata": {
+        "description": "This is the name of the existing VNet."
+      }
+    },
+    "virtualNetworkResourceGroup": {
+      "type": "string",
+      "defaultValue": "AZ-Networks",
+      "metadata": {
+        "description": "This is the name of the Resource Group which contains the PGI VNet."
+      }
+    },
+    "subnetName": {
+      "type": "string",
+      "defaultValue": "AZ-Subnet",
+      "metadata": {
+        "description": "This is the name of the subnet to use for the PGI Network."
+      }
+    },
+    "NFSVMSize": {
+      "type": "string",
+      "defaultValue": "Standard_DS4",
+      "allowedValues": [
+        "Standard_DS4",
+        "Standard_DS13",
+        "Standard_DS14"
+      ],
+      "metadata": {
+        "description": "Size of the VM used to for the NFS Server."
+      }
+    },
+    "ADM1VMSize": {
+      "type": "string",
+      "defaultValue": "Standard_A8",
+      "allowedValues": [
+        "Standard_A8",
+        "Standard_A9"
+      ],
+      "metadata": {
+        "description": "Size of the VM used to for the ADM1 Server. Must be A8 or A9 to participate in the MPI traffic."
+      }
+    },
+    "ComputeNodeVMSize": {
+      "type": "string",
+      "defaultValue": "Standard_A9",
+      "allowedValues": [
+        "Standard_A8",
+        "Standard_A9"
+      ],
+      "metadata": {
+        "description": "Size of the VM used to for the ADM1 Server. Must be A8 or A9 to participate in the MPI traffic."
+      }
+    },
+    "CNinstanceCount": { 
+      "type": "int" 
+    },
+    "blobName": {
+      "type": "string",
+      "defaultValue": "updatedCentOS71rdma-osDisk.vhd"
+    }, 
+    "adminUsername": {
+      "type": "string",
+      "metadata": {
+        "description": "Admin username for the VMs in the deployment."
+      }
+    },
+    "adminPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Admin password for the VMs in the deployment."
+      }
+    },
+    "dataDiskSize": {
+      "type": "int",
+      "defaultValue": 128,
+      "metadata": {
+        "description": "The size in GB of each data disk that is attached to the VM.  A RAID-0 volume is created with all data disks that is dataDiskSize * dataDiskCount in size."
+      }
+    }
+  },
+  "variables": {
+    "availabilitySetName": "HPC-av",
+    "sourceImageURI" : "[concat('https://', parameters('StandardStorageAccountName'),'.blob.core.windows.net/vhds/', parameters('blobName'))]",
+    "baseVHDURI" : "[concat('https://', parameters('StandardStorageAccountName'),'.blob.core.windows.net/vhd/')]",     
+    "location": "[resourceGroup().location]",
+    "ImagePublisher": "OpenLogic",
+    "ImageOffer": "CentOS",
+    "OSVersion": "7.1",
+    "vnetID": "[resourceId(parameters('virtualNetworkResourceGroup'), 'Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
+    "subnetRef": "[concat(variables('vnetID'),'/subnets/', parameters('subnetName'))]", 
+    "armApiVersion": "2015-06-15"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Compute/availabilitySets",
+      "name": "[variables('availabilitySetName')]",
+      "apiVersion": "[variables('armApiVersion')]",
+      "location": "[resourceGroup().location]"
+    },
+    {
+      "apiVersion": "[variables('armApiVersion')]",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "HPC-NFS-nic",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('PGIsubnetRef')]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "[variables('armApiVersion')]",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "HPC-ADM1-nic",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('PGIsubnetRef')]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2015-05-01-preview",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[concat('n', copyindex(1),'-nic')]",
+      "location": "[resourceGroup().location]",
+      "copy": {
+        "name": "nicLoop",
+        "count": "[parameters('CNinstanceCount')]"
+      },
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('PGIsubnetRef')]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "HPC-NFS",
+      "location": "[variables('location')]",
+      "dependsOn": [
+        "Microsoft.Network/networkInterfaces/HPC-NFS-nic"
+      ],
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[parameters('NFSVMSize')]"
+        },
+        "osProfile": {
+          "computername": "HPC-NFS",
+          "adminUsername": "[parameters('adminUsername')]",
+          "adminPassword": "[parameters('adminPassword')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "[variables('ImagePublisher')]",
+            "offer": "[variables('ImageOffer')]",
+            "sku": "[variables('OSVersion')]",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "osdisk",
+            "vhd": {
+              "uri": "[concat('http://',parameters('PremiumStorageAccountName'),'.blob.core.windows.net/nfsvm/nfsvm.vhd')]"
+            },
+            "caching": "ReadWrite",
+            "createOption": "FromImage"
+          },
+          "dataDisks": [ 
+            { 
+            "name": "datadisk0", 
+            "diskSizeGB": "[parameters('dataDiskSize')]", 
+            "lun": 0, 
+            "vhd": { 
+              "Uri":  "[concat('http://',parameters('PremiumStorageAccountName'),'.blob.core.windows.net/nfsvm/datadisk0.vhd')]" 
+              }, 
+            "caching": "ReadWrite", 
+            "createOption": "Empty" 
+            }, 
+            { 
+            "name": "datadisk1", 
+            "diskSizeGB": "[parameters('dataDiskSize')]", 
+            "lun": 1, 
+            "vhd": { 
+              "Uri":  "[concat('http://',parameters('PremiumStorageAccountName'),'.blob.core.windows.net/nfsvm/datadisk1.vhd')]" 
+              }, 
+            "caching": "ReadWrite", 
+            "createOption": "Empty" 
+            }, 
+            { 
+            "name": "datadisk2", 
+            "diskSizeGB": "[parameters('dataDiskSize')]", 
+            "lun": 2, 
+            "vhd": { 
+              "Uri":  "[concat('http://',parameters('PremiumStorageAccountName'),'.blob.core.windows.net/nfsvm/datadisk2.vhd')]" 
+              }, 
+            "caching": "ReadWrite", 
+            "createOption": "Empty" 
+            }, 
+            { 
+            "name": "datadisk3", 
+            "diskSizeGB": "[parameters('dataDiskSize')]", 
+            "lun": 3, 
+            "vhd": { 
+              "Uri":  "[concat('http://',parameters('PremiumStorageAccountName'),'.blob.core.windows.net/nfsvm/datadisk3.vhd')]" 
+              }, 
+            "caching": "ReadWrite", 
+            "createOption": "Empty" 
+            }, 
+            { 
+            "name": "datadisk4", 
+            "diskSizeGB": "[parameters('dataDiskSize')]", 
+            "lun": 4, 
+            "vhd": { 
+              "Uri":  "[concat('http://',parameters('PremiumStorageAccountName'),'.blob.core.windows.net/nfsvm/datadisk4.vhd')]" 
+              }, 
+            "caching": "ReadWrite", 
+            "createOption": "Empty" 
+            }, 
+            { 
+            "name": "datadisk5", 
+            "diskSizeGB": "[parameters('dataDiskSize')]", 
+            "lun": 5, 
+            "vhd": { 
+              "Uri":  "[concat('http://',parameters('PremiumStorageAccountName'),'.blob.core.windows.net/nfsvm/datadisk5.vhd')]" 
+              }, 
+            "caching": "ReadWrite", 
+            "createOption": "Empty" 
+            }, 
+            { 
+            "name": "datadisk6", 
+            "diskSizeGB": "[parameters('dataDiskSize')]", 
+            "lun": 6, 
+            "vhd": { 
+              "Uri":  "[concat('http://',parameters('PremiumStorageAccountName'),'.blob.core.windows.net/nfsvm/datadisk6.vhd')]" 
+              }, 
+            "caching": "ReadWrite", 
+            "createOption": "Empty" 
+            }, 
+            { 
+            "name": "datadisk7", 
+            "diskSizeGB": "[parameters('dataDiskSize')]", 
+            "lun": 7, 
+            "vhd": { 
+              "Uri":  "[concat('http://',parameters('PremiumStorageAccountName'),'.blob.core.windows.net/nfsvm/datadisk7.vhd')]" 
+              }, 
+            "caching": "ReadWrite", 
+            "createOption": "Empty" 
+            }, 
+            { 
+            "name": "datadisk8", 
+            "diskSizeGB": "[parameters('dataDiskSize')]", 
+            "lun": 8, 
+            "vhd": { 
+              "Uri":  "[concat('http://',parameters('PremiumStorageAccountName'),'.blob.core.windows.net/nfsvm/datadisk8.vhd')]" 
+              }, 
+            "caching": "ReadWrite", 
+            "createOption": "Empty" 
+            }, 
+            { 
+            "name": "datadisk9", 
+            "diskSizeGB": "[parameters('dataDiskSize')]", 
+            "lun": 9, 
+            "vhd": { 
+              "Uri":  "[concat('http://',parameters('PremiumStorageAccountName'),'.blob.core.windows.net/nfsvm/datadisk9.vhd')]" 
+              }, 
+            "caching": "ReadWrite", 
+            "createOption": "Empty" 
+            }, 
+            { 
+            "name": "datadisk10", 
+            "diskSizeGB": "[parameters('dataDiskSize')]", 
+            "lun": 10, 
+            "vhd": { 
+              "Uri":  "[concat('http://',parameters('PremiumStorageAccountName'),'.blob.core.windows.net/nfsvm/datadisk10.vhd')]" 
+              }, 
+            "caching": "ReadWrite", 
+            "createOption": "Empty" 
+            }, 
+            { 
+            "name": "datadisk11", 
+            "diskSizeGB": "[parameters('dataDiskSize')]", 
+            "lun": 11, 
+            "vhd": { 
+              "Uri":  "[concat('http://',parameters('PremiumStorageAccountName'),'.blob.core.windows.net/nfsvm/datadisk11.vhd')]" 
+              }, 
+            "caching": "ReadWrite", 
+            "createOption": "Empty" 
+            }, 
+            { 
+            "name": "datadisk12", 
+            "diskSizeGB": "[parameters('dataDiskSize')]", 
+            "lun": 12, 
+            "vhd": { 
+              "Uri":  "[concat('http://',parameters('PremiumStorageAccountName'),'.blob.core.windows.net/nfsvm/datadisk12.vhd')]" 
+              }, 
+            "caching": "ReadWrite", 
+            "createOption": "Empty" 
+            }, 
+            { 
+            "name": "datadisk13", 
+            "diskSizeGB": "[parameters('dataDiskSize')]", 
+            "lun": 13, 
+            "vhd": { 
+              "Uri":  "[concat('http://',parameters('PremiumStorageAccountName'),'.blob.core.windows.net/nfsvm/datadisk13.vhd')]" 
+              }, 
+            "caching": "ReadWrite", 
+            "createOption": "Empty" 
+            }, 
+            { 
+            "name": "datadisk14", 
+            "diskSizeGB": "[parameters('dataDiskSize')]", 
+            "lun": 14, 
+            "vhd": { 
+              "Uri":  "[concat('http://',parameters('PremiumStorageAccountName'),'.blob.core.windows.net/nfsvm/datadisk14.vhd')]" 
+              }, 
+            "caching": "ReadWrite", 
+            "createOption": "Empty" 
+            }, 
+            { 
+            "name": "datadisk15", 
+            "diskSizeGB": "[parameters('dataDiskSize')]", 
+            "lun": 15, 
+            "vhd": { 
+              "Uri":  "[concat('http://',parameters('PremiumStorageAccountName'),'.blob.core.windows.net/nfsvm/datadisk15.vhd')]" 
+              }, 
+            "caching": "ReadWrite", 
+            "createOption": "Empty" 
+            }
+          ]
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', 'HPC-NFS-nic')]",              
+              "properties": { "primary": true }
+            }
+          ]
+        },
+        "diagnosticsProfile": {
+          "bootDiagnostics": {
+            "enabled": "true",
+            "storageUri": "[concat('http://',parameters('StandardStorageAccountName'),'.blob.core.windows.net/')]"
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "HPC-ADM1",
+      "location": "[variables('location')]",
+      "dependsOn": [
+        "Microsoft.Network/networkInterfaces/HPC-ADM1-nic",
+        "[concat('Microsoft.Compute/availabilitySets/', variables('availabilitySetName'))]"
+      ],
+      "properties": {
+        "availabilitySet": {
+         "id": "[resourceId('Microsoft.Compute/availabilitySets', variables('availabilitySetName'))]"
+        },
+        "hardwareProfile": {
+          "vmSize": "[parameters('ADM1VMSize')]"
+        },
+        "osProfile": {
+          "computername": "HPC-ADM1",
+          "adminUsername": "[parameters('adminUsername')]",
+          "adminPassword": "[parameters('adminPassword')]"
+        },
+        "storageProfile": {
+          "osDisk": {
+            "name": "HPC-ADM1-osDisk",
+            "osType": "Linux",
+            "caching": "ReadWrite",
+            "createOption": "FromImage",
+            "image": {
+              "uri": "[variables('sourceImageURI')]"
+            },
+            "vhd": {
+              "uri": "[concat(variables('baseVHDURI'),'HPC-ADM1-osdisk.vhd')]"
+            }
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', 'HPC-ADM1-nic')]",              
+              "properties": { "primary": true }
+            }
+          ]
+         }
+        }
+      },
+
+      {
+      "apiVersion": "2015-05-01-preview",
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[concat('n', copyIndex(1))]",
+      "location": "[resourceGroup().location]",
+      "copy": {
+        "name": "ComputeNodeLoop",
+        "count": "[parameters('CNinstanceCount')]"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Compute/availabilitySets/', variables('availabilitySetName'))]",
+        "[concat('Microsoft.Network/networkInterfaces/', 'n', copyindex(1),'-nic')]"
+      ],
+      "properties": {
+        "availabilitySet": {
+          "id": "[resourceId('Microsoft.Compute/availabilitySets', variables('availabilitySetName'))]"
+        },
+        "hardwareProfile": {
+          "vmSize": "[parameters('ComputeNodeVMSize')]"
+        },
+        "osProfile": {
+          "computername": "[concat('n', copyIndex(1))]",
+          "adminUsername": "[parameters('adminUsername')]",
+          "adminPassword": "[parameters('adminPassword')]"
+        },
+        "storageProfile": {
+          "osDisk": {
+            "name": "cn-osDisk",
+            "osType": "Linux",
+            "caching": "ReadWrite",
+            "createOption": "FromImage",
+            "image": {
+              "uri": "[variables('sourceImageURI')]"
+            },
+            "vhd": {
+              "uri": "[concat(variables('baseVHDURI'),'osdisk', copyIndex(1), '.vhd')]"
+            }
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',concat('n', copyindex(1),'-nic'))]"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
+
+
+
+
