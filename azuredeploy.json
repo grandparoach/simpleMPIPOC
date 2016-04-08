@@ -27,14 +27,14 @@
       "type": "string",
       "defaultValue": "AZ-Networks",
       "metadata": {
-        "description": "This is the name of the Resource Group which contains the PGI VNet."
+        "description": "This is the name of the Resource Group which contains the VNet."
       }
     },
     "subnetName": {
       "type": "string",
       "defaultValue": "AZ-Subnet",
       "metadata": {
-        "description": "This is the name of the subnet to use for the PGI Network."
+        "description": "This is the name of the subnet to use for the Network."
       }
     },
     "NFSVMSize": {
@@ -90,6 +90,16 @@
         "description": "Admin password for the VMs in the deployment."
       }
     },
+    "hpcUserName": { 
+      "type": "string", 
+      "defaultValue": "hpc" 
+    }, 
+    "hpcUserPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Admin password for the VMs in the deployment."
+      }
+    },
     "dataDiskSize": {
       "type": "int",
       "defaultValue": 128,
@@ -107,7 +117,12 @@
     "ImageOffer": "CentOS",
     "OSVersion": "7.1",
     "vnetID": "[resourceId(parameters('virtualNetworkResourceGroup'), 'Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
-    "subnetRef": "[concat(variables('vnetID'),'/subnets/', parameters('subnetName'))]", 
+    "subnetRef": "[concat(variables('vnetID'),'/subnets/', parameters('subnetName'))]",
+    "templateBaseUrl": "https://raw.githubusercontent.com/grandparoach/simpleMPIPOC/master/",
+    "masterHostName": "HPC-ADM1",
+    "nfsScriptURI": "[concat(variables('templateBaseUrl'), 'nfssetup.sh')]",
+    "adminScriptURI": "[concat(variables('templateBaseUrl'), 'adminsetup.sh')]",
+    "cnScriptURI": "[concat(variables('templateBaseUrl'), 'cnsetup.sh')]", 
     "armApiVersion": "2015-06-15"
   },
   "resources": [
@@ -129,7 +144,7 @@
             "properties": {
               "privateIPAllocationMethod": "Dynamic",
               "subnet": {
-                "id": "[variables('PGIsubnetRef')]"
+                "id": "[variables('subnetRef')]"
               }
             }
           }
@@ -148,7 +163,7 @@
             "properties": {
               "privateIPAllocationMethod": "Dynamic",
               "subnet": {
-                "id": "[variables('PGIsubnetRef')]"
+                "id": "[variables('subnetRef')]"
               }
             }
           }
@@ -171,7 +186,7 @@
             "properties": {
               "privateIPAllocationMethod": "Dynamic",
               "subnet": {
-                "id": "[variables('PGIsubnetRef')]"
+                "id": "[variables('subnetRef')]"
               }
             }
           }
@@ -390,6 +405,26 @@
       }
     },
     {
+      "apiVersion": "[variables('armApiVersion')]",
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "name": "HPC-NFS/Installation",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "Microsoft.Compute/virtualMachines/HPC-NFS"
+      ],
+      "properties": {
+        "publisher": "Microsoft.OSTCExtensions",
+        "type": "CustomScriptForLinux",
+        "typeHandlerVersion": "1.3",
+        "settings": {
+          "fileUris": [
+            "[concat(variables('templateBaseUrl'), 'nfssetup.sh')]"
+          ],
+          "commandToExecute": "[concat('bash nfssetup.sh ',' ', variables('masterHostName'),' ', parameters('hpcUserName'))]"
+        }
+      }
+    },
+    {
       "apiVersion": "2015-06-15",
       "type": "Microsoft.Compute/virtualMachines",
       "name": "HPC-ADM1",
@@ -485,6 +520,10 @@
     }
   ]
 }
+
+
+
+
 
 
 
