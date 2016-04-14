@@ -332,7 +332,7 @@
         "type": "CustomScriptForLinux",
         "typeHandlerVersion": "1.4",
         "settings": {
-          "fileUris": [ "[parameters('finaldeployScriptURI')]"
+          "fileUris": [ "[variables('finaldeployScriptURI')]"
            ],
           "commandToExecute": "[concat('bash finaldeploy.sh',' ', parameters('ControlNodeHostName'),' ', parameters('hpcUserName'))]"
         }
