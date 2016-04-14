@@ -58,7 +58,7 @@
     },
     "CNinstanceCount": { 
       "type": "int",
-      "defaultValue": 8, 
+      "defaultValue": 8 
     },
     "blobName": {
       "type": "string",
