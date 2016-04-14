@@ -334,7 +334,7 @@
         "settings": {
           "fileUris": [ "[variables('finaldeployScriptURI')]"
            ],
-          "commandToExecute": "[concat('bash finaldeploy.sh',' ', parameters('ControlNodeHostName'),' ', parameters('hpcUserName'))]"
+          "commandToExecute": "[concat('bash finaldeploy.sh',' ', variables('ControlNodeHostName'),' ', parameters('hpcUserName'))]"
         }
       }
     },
