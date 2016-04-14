@@ -366,7 +366,7 @@
         "storageProfile": {
           "osDisk": {
             "name": "[concat(variables('ComputeNodeNamePrefix'),'-osDisk')]",
-            "osType": "[parameters('OSType')]",
+            "osType": "Linux",
             "caching": "ReadWrite",
             "createOption": "FromImage",
             "image": {
