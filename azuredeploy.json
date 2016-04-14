@@ -354,7 +354,7 @@
     {
       "apiVersion": "[variables('armApiVersion')]",
       "type": "Microsoft.Compute/virtualMachines/extensions",
-      "name": "HPC-NFS/Installation",
+      "name": "[concat(variables('ControlNodeHostName'), '/Installation')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
         "[concat('Microsoft.Compute/virtualMachines/', variables('ControlNodeHostName'))]"
