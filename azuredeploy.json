@@ -132,7 +132,7 @@
             "properties": {
               "privateIPAllocationMethod": "Dynamic",
               "publicIPAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIPAddresses', [concat(variables('ControlNodeHostName'), '-ip'))]"
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', concat(variables('ControlNodeHostName'), '-ip'))]"
               },
               "subnet": {
                 "id": "[variables('subnetRef')]"
@@ -160,16 +160,14 @@
           "adminPassword": "[parameters('adminPassword')]"
         },
         "storageProfile": {
-          "imageReference": {
-            "publisher": "[variables('ImagePublisher')]",
-            "offer": "[variables('ImageOffer')]",
-            "sku": "[variables('OSVersion')]",
-            "version": "latest"
-          },
           "osDisk": {
             "name": "osdisk",
+            "osType": "Linux",
+            "image": {
+              "uri": "[variables('sourceImageURI')]"
+            },
             "vhd": {
-              "uri": "[concat('http://',parameters('PremiumStorageAccountName'),'.blob.core.windows.net/nfsvm/nfsvm.vhd')]"
+              "uri": "[concat('http://',parameters('StorageAccountName'),'.blob.core.windows.net/nfsvm/nfsvm.vhd')]"
             },
             "caching": "ReadWrite",
             "createOption": "FromImage"
@@ -180,7 +178,7 @@
             "diskSizeGB": "[parameters('dataDiskSize')]", 
             "lun": 0, 
             "vhd": { 
-              "Uri":  "[concat('http://',parameters('PremiumStorageAccountName'),'.blob.core.windows.net/nfsvm/datadisk0.vhd')]" 
+              "Uri":  "[concat('http://',parameters('StorageAccountName'),'.blob.core.windows.net/nfsvm/datadisk0.vhd')]" 
               }, 
             "caching": "ReadWrite", 
             "createOption": "Empty" 
@@ -190,7 +188,7 @@
             "diskSizeGB": "[parameters('dataDiskSize')]", 
             "lun": 1, 
             "vhd": { 
-              "Uri":  "[concat('http://',parameters('PremiumStorageAccountName'),'.blob.core.windows.net/nfsvm/datadisk1.vhd')]" 
+              "Uri":  "[concat('http://',parameters('StorageAccountName'),'.blob.core.windows.net/nfsvm/datadisk1.vhd')]" 
               }, 
             "caching": "ReadWrite", 
             "createOption": "Empty" 
@@ -200,7 +198,7 @@
             "diskSizeGB": "[parameters('dataDiskSize')]", 
             "lun": 2, 
             "vhd": { 
-              "Uri":  "[concat('http://',parameters('PremiumStorageAccountName'),'.blob.core.windows.net/nfsvm/datadisk2.vhd')]" 
+              "Uri":  "[concat('http://',parameters('StorageAccountName'),'.blob.core.windows.net/nfsvm/datadisk2.vhd')]" 
               }, 
             "caching": "ReadWrite", 
             "createOption": "Empty" 
@@ -210,7 +208,7 @@
             "diskSizeGB": "[parameters('dataDiskSize')]", 
             "lun": 3, 
             "vhd": { 
-              "Uri":  "[concat('http://',parameters('PremiumStorageAccountName'),'.blob.core.windows.net/nfsvm/datadisk3.vhd')]" 
+              "Uri":  "[concat('http://',parameters('StorageAccountName'),'.blob.core.windows.net/nfsvm/datadisk3.vhd')]" 
               }, 
             "caching": "ReadWrite", 
             "createOption": "Empty" 
@@ -220,7 +218,7 @@
             "diskSizeGB": "[parameters('dataDiskSize')]", 
             "lun": 4, 
             "vhd": { 
-              "Uri":  "[concat('http://',parameters('PremiumStorageAccountName'),'.blob.core.windows.net/nfsvm/datadisk4.vhd')]" 
+              "Uri":  "[concat('http://',parameters('StorageAccountName'),'.blob.core.windows.net/nfsvm/datadisk4.vhd')]" 
               }, 
             "caching": "ReadWrite", 
             "createOption": "Empty" 
@@ -230,7 +228,7 @@
             "diskSizeGB": "[parameters('dataDiskSize')]", 
             "lun": 5, 
             "vhd": { 
-              "Uri":  "[concat('http://',parameters('PremiumStorageAccountName'),'.blob.core.windows.net/nfsvm/datadisk5.vhd')]" 
+              "Uri":  "[concat('http://',parameters('StorageAccountName'),'.blob.core.windows.net/nfsvm/datadisk5.vhd')]" 
               }, 
             "caching": "ReadWrite", 
             "createOption": "Empty" 
@@ -240,7 +238,7 @@
             "diskSizeGB": "[parameters('dataDiskSize')]", 
             "lun": 6, 
             "vhd": { 
-              "Uri":  "[concat('http://',parameters('PremiumStorageAccountName'),'.blob.core.windows.net/nfsvm/datadisk6.vhd')]" 
+              "Uri":  "[concat('http://',parameters('StorageAccountName'),'.blob.core.windows.net/nfsvm/datadisk6.vhd')]" 
               }, 
             "caching": "ReadWrite", 
             "createOption": "Empty" 
@@ -250,7 +248,7 @@
             "diskSizeGB": "[parameters('dataDiskSize')]", 
             "lun": 7, 
             "vhd": { 
-              "Uri":  "[concat('http://',parameters('PremiumStorageAccountName'),'.blob.core.windows.net/nfsvm/datadisk7.vhd')]" 
+              "Uri":  "[concat('http://',parameters('StorageAccountName'),'.blob.core.windows.net/nfsvm/datadisk7.vhd')]" 
               }, 
             "caching": "ReadWrite", 
             "createOption": "Empty" 
@@ -260,7 +258,7 @@
             "diskSizeGB": "[parameters('dataDiskSize')]", 
             "lun": 8, 
             "vhd": { 
-              "Uri":  "[concat('http://',parameters('PremiumStorageAccountName'),'.blob.core.windows.net/nfsvm/datadisk8.vhd')]" 
+              "Uri":  "[concat('http://',parameters('StorageAccountName'),'.blob.core.windows.net/nfsvm/datadisk8.vhd')]" 
               }, 
             "caching": "ReadWrite", 
             "createOption": "Empty" 
@@ -270,7 +268,7 @@
             "diskSizeGB": "[parameters('dataDiskSize')]", 
             "lun": 9, 
             "vhd": { 
-              "Uri":  "[concat('http://',parameters('PremiumStorageAccountName'),'.blob.core.windows.net/nfsvm/datadisk9.vhd')]" 
+              "Uri":  "[concat('http://',parameters('StorageAccountName'),'.blob.core.windows.net/nfsvm/datadisk9.vhd')]" 
               }, 
             "caching": "ReadWrite", 
             "createOption": "Empty" 
@@ -280,7 +278,7 @@
             "diskSizeGB": "[parameters('dataDiskSize')]", 
             "lun": 10, 
             "vhd": { 
-              "Uri":  "[concat('http://',parameters('PremiumStorageAccountName'),'.blob.core.windows.net/nfsvm/datadisk10.vhd')]" 
+              "Uri":  "[concat('http://',parameters('StorageAccountName'),'.blob.core.windows.net/nfsvm/datadisk10.vhd')]" 
               }, 
             "caching": "ReadWrite", 
             "createOption": "Empty" 
@@ -290,7 +288,7 @@
             "diskSizeGB": "[parameters('dataDiskSize')]", 
             "lun": 11, 
             "vhd": { 
-              "Uri":  "[concat('http://',parameters('PremiumStorageAccountName'),'.blob.core.windows.net/nfsvm/datadisk11.vhd')]" 
+              "Uri":  "[concat('http://',parameters('StorageAccountName'),'.blob.core.windows.net/nfsvm/datadisk11.vhd')]" 
               }, 
             "caching": "ReadWrite", 
             "createOption": "Empty" 
@@ -300,7 +298,7 @@
             "diskSizeGB": "[parameters('dataDiskSize')]", 
             "lun": 12, 
             "vhd": { 
-              "Uri":  "[concat('http://',parameters('PremiumStorageAccountName'),'.blob.core.windows.net/nfsvm/datadisk12.vhd')]" 
+              "Uri":  "[concat('http://',parameters('StorageAccountName'),'.blob.core.windows.net/nfsvm/datadisk12.vhd')]" 
               }, 
             "caching": "ReadWrite", 
             "createOption": "Empty" 
@@ -310,7 +308,7 @@
             "diskSizeGB": "[parameters('dataDiskSize')]", 
             "lun": 13, 
             "vhd": { 
-              "Uri":  "[concat('http://',parameters('PremiumStorageAccountName'),'.blob.core.windows.net/nfsvm/datadisk13.vhd')]" 
+              "Uri":  "[concat('http://',parameters('StorageAccountName'),'.blob.core.windows.net/nfsvm/datadisk13.vhd')]" 
               }, 
             "caching": "ReadWrite", 
             "createOption": "Empty" 
@@ -320,7 +318,7 @@
             "diskSizeGB": "[parameters('dataDiskSize')]", 
             "lun": 14, 
             "vhd": { 
-              "Uri":  "[concat('http://',parameters('PremiumStorageAccountName'),'.blob.core.windows.net/nfsvm/datadisk14.vhd')]" 
+              "Uri":  "[concat('http://',parameters('StorageAccountName'),'.blob.core.windows.net/nfsvm/datadisk14.vhd')]" 
               }, 
             "caching": "ReadWrite", 
             "createOption": "Empty" 
@@ -330,7 +328,7 @@
             "diskSizeGB": "[parameters('dataDiskSize')]", 
             "lun": 15, 
             "vhd": { 
-              "Uri":  "[concat('http://',parameters('PremiumStorageAccountName'),'.blob.core.windows.net/nfsvm/datadisk15.vhd')]" 
+              "Uri":  "[concat('http://',parameters('StorageAccountName'),'.blob.core.windows.net/nfsvm/datadisk15.vhd')]" 
               }, 
             "caching": "ReadWrite", 
             "createOption": "Empty" 
@@ -340,7 +338,7 @@
         "networkProfile": {
           "networkInterfaces": [
             {
-              "id": "[resourceId('Microsoft.Network/networkInterfaces', 'HPC-NFS-nic')]",              
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(variables('ControlNodeHostName'), '-nic'))]",              
               "properties": { "primary": true }
             }
           ]
@@ -348,7 +346,7 @@
         "diagnosticsProfile": {
           "bootDiagnostics": {
             "enabled": "true",
-            "storageUri": "[concat('http://',parameters('StandardStorageAccountName'),'.blob.core.windows.net/')]"
+            "storageUri": "[concat('http://',parameters('StorageAccountName'),'.blob.core.windows.net/')]"
           }
         }
       }
@@ -359,7 +357,7 @@
       "name": "HPC-NFS/Installation",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "Microsoft.Compute/virtualMachines/HPC-NFS"
+        "[concat('Microsoft.Compute/virtualMachines/', variables('ControlNodeHostName'))]"
       ],
       "properties": {
         "publisher": "Microsoft.OSTCExtensions",
@@ -369,7 +367,7 @@
           "fileUris": [
             "[concat(variables('templateBaseUrl'), 'setup.sh')]"
           ],
-          "commandToExecute": "[concat('bash setup.sh ',' ', variables('NFSHostName'),' ', parameters('hpcUserName'))]"
+          "commandToExecute": "[concat('bash setup.sh ',' ', variables('ControlNodeHostName'),' ', parameters('hpcUserName'))]"
         }
       }
     }
