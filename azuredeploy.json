@@ -99,6 +99,7 @@
     "ControlNodeHostName": "azrvlp-engsimctl",
     "ComputeNodeNamePrefix": "azrvlp-engsimw",
     "SetupScriptURI": "[concat(variables('templateBaseUrl'), 'setup.sh')]",
+    "finaldeployscriptURI": "[concat(variables('templateBaseUrl'), 'finaldeploy.sh')]",
     "armApiVersion": "2015-06-15"
   },
   "resources": [
@@ -288,6 +289,100 @@
             "[concat(variables('templateBaseUrl'), 'setup.sh')]"
           ],
           "commandToExecute": "[concat('bash setup.sh ',' ', variables('ControlNodeHostName'),' ', parameters('hpcUserName'))]"
+        }
+      }
+    },
+    {
+      "apiVersion": "2015-05-01-preview",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[concat('nic', variables('ComputeNodeNamePrefix'), padLeft(copyindex(1), 2, '0'))]",
+      "location": "[resourceGroup().location]",
+      "copy": {
+        "name": "[concat('nicLoop', variables('ComputeNodeNamePrefix'))]",
+        "count": "[parameters('CNinstanceCount')]"
+      },
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[concat('/subscriptions/', subscription().subscriptionId,'/resourceGroups/', parameters('virtualNetworkResourceGroup'), '/providers/Microsoft.Network/virtualNetworks/', parameters('virtualNetworkName'), '/subnets/', parameters('subnetName'))]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2015-05-01-preview",
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "name": "[concat(variables('ComputeNodeNamePrefix'), padLeft(copyIndex(1), 2, '0'), '/Installation')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+	            "[concat('Microsoft.Compute/virtualMachines/', variables('ComputeNodeNamePrefix'), padLeft(copyIndex(1), 2, '0'))]"
+	            ],
+      "copy": {
+        "name": "foo",
+        "count": "[parameters('CNinstanceCount')]"
+      },
+      "properties": {
+        "publisher": "Microsoft.OSTCExtensions",
+        "type": "CustomScriptForLinux",
+        "typeHandlerVersion": "1.4",
+        "settings": {
+          "fileUris": [ "[parameters('finaldeployScriptURI')]"
+           ],
+          "commandToExecute": "[concat('bash finaldeploy.sh',' ', parameters('ControlNodeHostName'),' ', parameters('hpcUserName'))]"
+        }
+      }
+    },
+    {
+      "apiVersion": "2015-05-01-preview",
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[concat(variables('ComputeNodeNamePrefix'), padLeft(copyIndex(), 2, '0'))]",
+      "location": "[resourceGroup().location]",
+      "copy": {
+        "name": "[concat('virtualMachineLoop', variables('ComputeNodeNamePrefix'))]",
+        "count": "[parameters('CNinstanceCount')]"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Compute/availabilitySets/', variables('availabilitySetName'))]",
+        "[concat('Microsoft.Network/networkInterfaces/', 'nic', variables('ComputeNodeNamePrefix'), padLeft(copyindex(), 2, '0'))]"
+      ],
+      "properties": {
+        "availabilitySet": {
+          "id": "[resourceId('Microsoft.Compute/availabilitySets', variables('availabilitySetName'))]"
+        },
+        "hardwareProfile": {
+          "vmSize": "[parameters('ComputeNodevmSize')]"
+        },
+        "osProfile": {
+          "computername": "[concat(variables('ComputeNodeNamePrefix'), padLeft(copyIndex(), 2, '0'))]",
+          "adminUsername": "[parameters('adminUsername')]",
+          "adminPassword": "[parameters('adminPassword')]"
+        },
+        "storageProfile": {
+          "osDisk": {
+            "name": "[concat(variables('ComputeNodeNamePrefix'),'-osDisk')]",
+            "osType": "[parameters('OSType')]",
+            "caching": "ReadWrite",
+            "createOption": "FromImage",
+            "image": {
+              "uri": "[variables('sourceImageURI')]"
+            },
+            "vhd": {
+              "uri": "[concat(variables('baseVHDURI'),'osdisk', variables('ComputeNodeNamePrefix'), padLeft(copyIndex(), 2, '0'), '.vhd')]"
+            }
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',concat('nic', variables('ComputeNodeNamePrefix'), padLeft(copyindex(), 2, '0')))]"
+            }
+          ]
         }
       }
     }
