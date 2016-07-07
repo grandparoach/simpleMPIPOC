@@ -29,7 +29,21 @@ is_master()
 install_pkgs()
 {
     pkgs="zlib zlib-devel bzip2 bzip2-devel bzip2-libs openssl openssl-devel openssl-libs gcc gcc-c++ nfs-utils rpcbind mdadm wget"
-    yum -y install $pkgs
+    yum -y install zlib
+    yum -y install zlib-devel
+    yum -y install bzip2
+    yum -y install bzip2-devel
+    yum -y install bzip2-libs
+    yum -y install openssl
+    yum -y install openssl-devel
+    yum -y install openssl-libs
+    yum -y install gcc
+    yum -y install gcc-c++
+    yum -y install nfs-utils
+    yum -y install rpcbind
+    yum -y install mdadm
+    yum -y install wget
+
 }
 
 # Partitions all data disks attached to the VM and creates
