@@ -95,7 +95,7 @@ setup_shares()
         mount | grep "^master:$SHARE_DATA"
     fi
 }
-
+#
 
 # Adds a common HPC user to the node and configures public key SSh auth.
 # The HPC user has a shared home directory (NFS share on master) and access
@@ -163,6 +163,7 @@ setup_env()
 }
 
 install_pkgs
-setup_shares
-setup_hpc_user
+setup_data_disks
+# setup_shares
+# setup_hpc_user
 setup_env
