@@ -46,7 +46,7 @@ install_pkgs()
 }
 
 
-setup_shares()
+#setup_shares()
 {
     mkdir -p $SHARE_HOME
     mkdir -p $SHARE_DATA
@@ -99,8 +99,8 @@ setup_env()
 }
 
 install_pkgs
-setup_shares
-setup_hpc_user
+#setup_shares
+#setup_hpc_user
 setup_env
 
 
