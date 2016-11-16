@@ -33,6 +33,15 @@ install_pkgs()
     yum -y install rpcbind
     yum -y install mdadm
     yum -y install wget
+    yum -y install libX11.i686
+    yum -y install libXext.i686
+    yum -y install libXtst.i686
+    yum -y install openmotif22.i686
+    yum -y install ksh
+    yum -y install ncurses-libs.i686
+    yum -y install compat-libf2c-34.x86_64
+    yum -y install dos2unix
+    
     
 }
 
