@@ -3,7 +3,7 @@ Templates and scripts for deploying a Master Node which serves as an NFS Server 
 
 It will provision an isolated VNet with Public IP addresses on the Master and the Analytics machines.
 
-The images to be deployed on the Mater and the Compute nodes can be selected from input parameters.  The Analytics machine will use the Data Scrience image.
+The images to be deployed on the Mater and the Compute nodes can be selected from input parameters.  The Analytics machine will use the Data Science image.
 
 Besides the admin user, it also provisions a user account on all of the machines named "hpcuser".  This user will have its home directory provisioned on the NFS server so that the .ssh directory will be shared among all the nodes enabling ssh connections between all of them.
 So, all MPI jobs must be run as the "hpcuser".
