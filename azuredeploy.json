@@ -560,7 +560,7 @@
       },
       "dependsOn": [
         "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]",
-        "[concat(variables('masterBoxName'), '/ext')]"
+        "[concat('Microsoft.Compute/virtualMachines/extensions/',variables('masterBoxName'), '/ext')]"
       ],
       "properties": {
         "overprovision": "true",
@@ -627,6 +627,8 @@
     }
   ]
 }
+
+
 
 
 
