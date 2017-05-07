@@ -366,7 +366,7 @@
     
     "mastervmScripts": {
       "scriptsToDownload": [
-        "https://raw.githubusercontent.com/grandparoach/onering/master/master-setup.sh"
+        "https://raw.githubusercontent.com/grandparoach/simpleMPIPOC/NOAA/master-setup.sh"
       ],
       "commandToExecute": "bash master-setup.sh"
     },
@@ -374,7 +374,7 @@
     "cnSetupScript": "cn-setup.sh",
     "vmScripts": {
       "scriptsToDownload": [
-        "https://raw.githubusercontent.com/grandparoach/onering/master/cn-setup.sh"
+        "https://raw.githubusercontent.com/grandparoach/simpleMPIPOC/NOAA/cn-setup.sh"
       ],
       "commandToExecute": "[concat('bash cn-setup.sh ', variables('masterBoxName'))]"
     }
@@ -547,6 +547,118 @@
       }
     },
     {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "Analytics-pip",
+      "location": "[variables('location')]",
+      "apiVersion": "2016-03-30",
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic",
+        "dnsSettings": {
+          "domainNameLabel": "[toLower(substring(concat(parameters('vmPrefix'), '-Analytics', uniqueString(resourceGroup().id)), 0, 9))]"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "Analytics-nic",
+      "location": "[variables('location')]",
+      "apiVersion": "2016-03-30",
+      "dependsOn": [
+        "Microsoft.Network/publicIPAddresses/Analytics-pip"
+      ],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "Analytics-IPconfig",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', 'Analytics-pip')]"
+              }, 
+              "subnet": {
+                "id": "[variables('infraSubnetRef')]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "AnalyticsSvr",
+      "location": "[variables('location')]",
+      "apiVersion": "2016-04-30-preview",
+      "dependsOn": [
+        "Microsoft.Network/networkinterfaces/Analytics-nic",
+        "[concat('Microsoft.Storage/storageAccounts/', variables('SAName'))]",
+        "[concat('Microsoft.Storage/storageAccounts/', variables('DiagSAName'))]"
+      ],
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[parameters('AnalyticsVMsku')]"
+        },
+        "osProfile": {
+          "computerName": "AnalyticsSvr",
+          "adminUsername": "[parameters('adminUserName')]",
+          "adminPassword": "[parameters('adminPassword')]",
+          "linuxConfiguration": "[variables('linuxConfiguration')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+             "publisher": "microsoft-ads",
+             "offer": "linux-data-science-vm",
+             "sku": "linuxdsvm",
+             "version": "latest"
+          },
+          "osDisk": {
+            "caching": "ReadOnly",
+            "createOption": "FromImage",
+             "managedDisk": {
+                "storageAccountType": "Standard_LRS"
+             }
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+               "id": "[resourceId('Microsoft.Network/networkInterfaces', 'Analytics-nic')]"
+            }
+          ]
+        },
+        "diagnosticsProfile": {
+          "bootDiagnostics": {
+            "enabled": "true",
+           "storageUri": "[concat('http://',variables('DiagSAName'),'.blob.core.windows.net')]"
+          }
+        }
+      }
+    },
+    
+     
+    {
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "name": "AnalyticsSvr/ext",
+      "apiVersion": "2015-06-15",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "Microsoft.Compute/virtualMachines/AnalyticsSvr"
+      ],
+      "properties": {
+        "publisher": "Microsoft.Azure.Extensions",
+        "type": "CustomScript",
+        "typeHandlerVersion": "2.0",
+        "autoUpgradeMinorVersion": true,
+        "settings": {
+          "fileUris": "[variables('vmScripts').scriptsToDownload]",
+          "timestamp": 12
+        },
+        "protectedSettings": {
+          "commandToExecute": "[variables('vmScripts').commandToExecute]",
+        }
+      }
+    },
+
+    {
       "type": "Microsoft.Compute/virtualMachineScaleSets",
       "name": "[parameters('vmPrefix')]",
       "location": "[variables('location')]",
@@ -625,3 +737,5 @@
     }
   ]
 }
+
+
