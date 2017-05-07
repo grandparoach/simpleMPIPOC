@@ -1,7 +1,7 @@
 #!/bin/bash
 
-Master_Name=$1
-echo $Master_Name
+MASTER_NAME=$1
+echo $MASTER_NAME
 
 # Shares
 SHARE_HOME=/share/home
@@ -20,13 +20,11 @@ HPC_GID=7007
 
 mount_nfs()
 {
-	log "install NFS"
 
 	yum -y install nfs-utils nfs-utils-lib
 	
 	mkdir -p ${NFS_MOUNT}
 
-	log "mounting NFS on " ${MASTER_NAME}
 	showmount -e ${MASTER_NAME}
 	mount -t nfs ${MASTER_NAME}:${NFS_ON_MASTER} ${NFS_MOUNT}
 	
