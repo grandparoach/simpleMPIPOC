@@ -641,7 +641,8 @@
       "apiVersion": "2015-06-15",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "Microsoft.Compute/virtualMachines/AnalyticsSvr"
+        "Microsoft.Compute/virtualMachines/AnalyticsSvr",
+         "[concat(variables('masterBoxName'), '/ext')]"
       ],
       "properties": {
         "publisher": "Microsoft.Azure.Extensions",
@@ -653,7 +654,7 @@
           "timestamp": 12
         },
         "protectedSettings": {
-          "commandToExecute": "[variables('vmScripts').commandToExecute]",
+          "commandToExecute": "[variables('vmScripts').commandToExecute]"
         }
       }
     },
@@ -670,7 +671,7 @@
       },
       "dependsOn": [
         "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]",
-        "[concat('Microsoft.Compute/virtualMachines/', variables('masterBoxName'))]"
+        "[concat(variables('masterBoxName'), '/ext')]"
       ],
       "properties": {
         "overprovision": "true",
