@@ -1,13 +1,14 @@
 # simpleMPIPOC
-Templates and scripts for deploying a Premium NFS Server, a head node, and compute nodes 
-uses a custom image for the compute cluster
+Templates and scripts for deploying a Master Node which serves as an NFS Server and a JumpBox to the Compute Nodes.  It will also deploy the compute nodes to a VM Scale Set, and it will provision an Analytics node.
 
-Requires that a Premium Storage account be provisioned in advance for the NFS Server
-Requires that a Standard Storage account be provisioned in advance with the custom image page blob residing in a container named "vhds". Requires an existing Virtual Network and subnet
+It will provision an isolated VNet with Public IP addresses on the Master and the Analytics machines.
 
-Does not provision any Public IP addresses, so there should either be a VPN connection to an on-prem network, or a jump box with a public IP on the same Virtual Network.
+The images to be deployed on the Mater and the Compute nodes can be selected from input parameters.  The Analytics machine will use the Data Scrience image.
 
-Besides the admin user, it also provisions a user account on all of the machines with the name and password specified in the parameters. This user will have its home directory provisioned on the NFS server so that the .ssh directory will be shared among all the nodes enabling ssh connections between all of them.
+Besides the admin user, it also provisions a user account on all of the machines named "hpcuser".  This user will have its home directory provisioned on the NFS server so that the .ssh directory will be shared among all the nodes enabling ssh connections between all of them.
+So, all MPI jobs must be run as the "hpcuser".
+
+
 
 
 
