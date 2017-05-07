@@ -9,6 +9,7 @@ Besides the admin user, it also provisions a user account on all of the machines
 So, all MPI jobs must be run as the "hpcuser".
 
 
+[![Click to deploy template on Azure](http://azuredeploy.net/deploybutton.png "Click to deploy template on Azure")](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fgrandparoach%2FsimpleMPIPOC%2FNOAA%2Fazuredeploy.json)  
 
 
 
