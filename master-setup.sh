@@ -95,7 +95,8 @@ setup_disks()
 	echo "nbDisks=$nbDisks"
 	
 	dataDevices="`fdisk -l | grep '^Disk /dev/' | grep $dataDiskSize | awk '{print $2}' | awk -F: '{print $1}' | sort | head -$nbDisks | tr '\n' ' ' | sed 's|/dev/||g'`"
-
+    
+    mkdir -p $SHARE_HOME
 	mkdir -p $NFS_DATA
 	setup_data_disks $NFS_DATA "xfs" "$dataDevices" "nfsdata"
 
@@ -122,8 +123,6 @@ setup_user()
     setenforce permissive
     
     groupadd -g $HPC_GID $HPC_GROUP
-    mkdir -p $SHARE_HOME
-    mkdir -p $SHARE_HOME/$HPC_USER
     
     # Don't require password for HPC user sudo
     echo "$HPC_USER ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
@@ -154,14 +153,16 @@ setup_user()
 	chmod 600 $SHARE_HOME/$HPC_USER/.ssh/id_rsa
 	chmod 644 $SHARE_HOME/$HPC_USER/.ssh/id_rsa.pub
 	
-	chown $HPC_USER:$HPC_GROUP $SHARE_SCRATCH
+	chown $HPC_USER:$HPC_GROUP $NFS_DATA
 }
 
 
-setup_user
+
 install_pkgs
 setup_disks
+setup_user
 
 
 exit 0
+
 
