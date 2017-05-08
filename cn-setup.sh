@@ -3,6 +3,10 @@
 MASTER_NAME=$1
 echo $MASTER_NAME
 
+# disable selinux
+    sed -i 's/enforcing/disabled/g' /etc/selinux/config
+    setenforce permissive
+
 # Shares
 SHARE_HOME=/share/home
 NFS_ON_MASTER=/share/data
