@@ -216,7 +216,6 @@
     "infraSubnetRef": "[concat(variables('vnetID'),'/subnets/infraSubnet/')]",
     "nsgName": "nsg-master",
     "masterBoxName": "[concat(variables('longNamingInfix'), 'master')]",
-    "SAName": "[concat(uniqueString(concat(resourceGroup().id, variables('newStorageAccountSuffix'), 'masterboxsa')), 'master')]",
     "DiagSAName": "[concat(uniqueString(concat(resourceGroup().id, variables('newStorageAccountSuffix'), 'masterboxsadiag')), 'diag')]",
     "MasterIPConfigName": "[concat(variables('masterBoxName'), 'ipconfig')]",
     "MasterNicName": "[concat(variables('masterBoxName'), 'nic')]",
@@ -422,15 +421,6 @@
     },
     {
       "type": "Microsoft.Storage/storageAccounts",
-      "name": "[variables('SAName')]",
-      "location": "[variables('location')]",
-      "apiVersion": "2015-06-15",
-      "properties": {
-        "accountType": "Premium_LRS"
-      }
-    },
-    {
-      "type": "Microsoft.Storage/storageAccounts",
       "name": "[variables('DiagSAName')]",
       "location": "[variables('location')]",
       "apiVersion": "2015-06-15",
@@ -483,7 +473,6 @@
       "apiVersion": "2016-04-30-preview",
       "dependsOn": [
         "[concat('Microsoft.Network/networkinterfaces/', variables('MasterNicName'))]",
-        "[concat('Microsoft.Storage/storageAccounts/', variables('SAName'))]",
         "[concat('Microsoft.Storage/storageAccounts/', variables('DiagSAName'))]"
       ],
       "properties": {
@@ -563,7 +552,7 @@
         "[concat('Microsoft.Compute/virtualMachines/', variables('masterBoxName'),'/extensions/ext')]"
       ],
       "properties": {
-        "overprovision": "true",
+        "overprovision": "false",
         "upgradePolicy": {
           "mode": "Manual"
         },
@@ -615,8 +604,7 @@
                   "autoUpgradeMinorVersion": true,
                   "settings": {
                     "fileUris": "[variables('vmScripts').scriptsToDownload]",
-                    "commandToExecute": "[variables('vmScripts').commandToExecute]",
-                    "timestamp": 12345
+                    "commandToExecute": "[variables('vmScripts').commandToExecute]"
                   }
                 }
               }
@@ -627,6 +615,8 @@
     }
   ]
 }
+
+
 
 
 
