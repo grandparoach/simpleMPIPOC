@@ -370,7 +370,6 @@
       "commandToExecute": "bash master-setup.sh"
     },
     
-    "cnSetupScript": "cn-setup.sh",
     "vmScripts": {
       "scriptsToDownload": [
         "https://raw.githubusercontent.com/grandparoach/simpleMPIPOC/NOAA/cn-setup.sh"
@@ -524,8 +523,7 @@
         "typeHandlerVersion": "2.0",
         "autoUpgradeMinorVersion": true,
         "settings": {
-          "fileUris": "[variables('mastervmScripts').scriptsToDownload]",
-          "timestamp": 12
+          "fileUris": "[variables('mastervmScripts').scriptsToDownload]"
         },
         "protectedSettings": {
           "commandToExecute": "[variables('mastervmScripts').commandToExecute]"
@@ -594,6 +592,7 @@
              "version": "latest"
           },
           "osDisk": {
+            "name": "AnalyticsSvr_OsDisk_1_02c69dfa870f4501ad6ecf559ac00853",
             "caching": "ReadOnly",
             "createOption": "FromImage",
              "managedDisk": {
@@ -616,7 +615,28 @@
         }
       }
     },
-    
+     {
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "name": "AnalyticsSvr/ext",
+      "apiVersion": "2015-06-15",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "Microsoft.Compute/virtualMachines/AnalyticsSvr",
+        "[concat('Microsoft.Compute/virtualMachines/', variables('masterBoxName'),'/extensions/ext')]"
+      ],
+      "properties": {
+        "publisher": "Microsoft.Azure.Extensions",
+        "type": "CustomScript",
+        "typeHandlerVersion": "2.0",
+        "autoUpgradeMinorVersion": true,
+        "settings": {
+          "fileUris": "[variables('vmScripts').scriptsToDownload]"
+        },
+        "protectedSettings": {
+          "commandToExecute": "[variables('vmScripts').commandToExecute]"
+        }
+      }
+    },
 
     {
       "type": "Microsoft.Compute/virtualMachineScaleSets",
@@ -696,6 +716,8 @@
     }
   ]
 }
+
+
 
 
 
