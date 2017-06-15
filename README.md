@@ -1,7 +1,7 @@
 # simpleMPIPOC
 Templates and scripts for deploying a Master Node which serves as an NFS Server to the Compute Nodes.  It will also deploy the compute nodes.  All the machines are built using Managed Storage.
 
-It will provision the resources onto an existing V-Net, so there will not be any public IP addresses.
+It will provision a new V-Net and the resources will be attached to it.  All the machines will have Public IP addresses.
 
 The sizes and images to be deployed on the Master and the Compute nodes can be selected from input parameters.  
 
@@ -17,7 +17,7 @@ Also, be sure that there is no conflict elsewhere for the 172.16.0.0/16 address 
 The DataDiskSize and nbDataDisks parameters refer to the NFS Server.  ndDataDisks of DataDiskSize will be attached to the NFS Server, then they will be formatted and combined into a single RAID 0 volume which will then be exported as the /share/data directory. 
 
 
-[![Click to deploy template on Azure](http://azuredeploy.net/deploybutton.png "Click to deploy template on Azure")](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fgrandparoach%2FsimpleMPIPOC%2FCat%2Fazuredeploy.json)  
+[![Click to deploy template on Azure](http://azuredeploy.net/deploybutton.png "Click to deploy template on Azure")](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fgrandparoach%2FsimpleMPIPOC%2FCDAD%2Fazuredeploy.json)  
 
 
 
