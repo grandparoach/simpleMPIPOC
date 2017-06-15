@@ -1,0 +1,17 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "vmPrefix": { "value": "bruce-az" },
+    "MasterVMsku": { "value": "Standard_DS4_v2" },
+    "masterImage": { "value": "CentOS_7.2" },
+    "CompNodeVMsku": { "value": "Standard_H16r" },
+    "computeNodeImage": { "value": "CentOS-HPC_7.1" },
+    "computeNodeCount": { "value": 2 },
+    "adminUserName": { "value": "bruceadmin" },
+    "authenticationType": { "value": "password" },
+    "adminPassword": { "value": "Pass@word1234" },
+    "dataDiskSize": { "value": 128 },
+    "nbDataDisks": { "value": 8 }
+  }
+}
