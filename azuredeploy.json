@@ -11,7 +11,7 @@
     },
     "MasterVMsku": {
       "type": "string",
-      "defaultValue": "Standard_DS14_v2",
+      "defaultValue": "Standard_DS4_v2",
       "allowedValues": [
         "Standard_DS1_v2",
         "Standard_DS2_v2",
@@ -46,40 +46,8 @@
       "allowedValues": [
         "Standard_A8",
         "Standard_A9",
-        "Standard_D2_v2",
-        "Standard_D3_v2",
-        "Standard_D4_v2",
-        "Standard_D5_v2",
-        "Standard_D11_v2",
-        "Standard_D12_v2",
-        "Standard_D13_v2",
-        "Standard_D14_v2",
-        "Standard_D15_v2",
-        "Standard_DS2_v2",
-        "Standard_DS3_v2",
-        "Standard_DS4_v2",
-        "Standard_DS5_v2",
-        "Standard_DS11_v2",
-        "Standard_DS12_v2",
-        "Standard_DS13_v2",
-        "Standard_DS14_v2",
-        "Standard_DS15_v2",
-        "Standard_F4",
-        "Standard_F8",
-        "Standard_F16",
-        "Standard_F4s",
-        "Standard_F8s",
-        "Standard_F16s",
-        "Standard_H8",
-        "Standard_H16",
-        "Standard_H8m",
-        "Standard_H16m",
         "Standard_H16r",
-        "Standard_H16mr",
-        "Standard_NC6",
-        "Standard_NC12",
-        "Standard_NC24",
-        "Standard_NC24r"
+        "Standard_H16mr"
       ],
       "metadata": {
         "description": "Instance type to use for the compute nodes"
@@ -103,7 +71,7 @@
       "metadata": {
         "description": "Number of VM instances for Compute Node Scaleset (100 or less)."
       },
-      "defaultValue": 2,
+      "defaultValue": 4,
       "maxValue": 100
     },
     "adminUserName": {
@@ -153,44 +121,23 @@
         "description": "The number of disks to attach to the NFS server."
       }
     },
-    "existingVNetName": {
-      "type": "string",
-      "defaultValue": "ARMHPCVNet",
-      "metadata": {
-        "description": "name of existing Virtual Network"
-      }
-    },
-    "existingVNetResourceGroup": {
-      "type": "string",
-       "defaultValue": "ARMHPC",
-      "metadata": {
-        "description": "name of Resource Group for existing Virtual Network"
-      }
-    },
-    "existingSubnetName": {
-      "type": "string",
-      "defaultValue": "Subnet-2",
-      "metadata": {
-        "description": "name of existing Virtual Network"
-      }
-    },
     "MasterStaticIPAddress": {
       "type": "string",
-      "defaultValue": "10.0.2.15",
+      "defaultValue": "10.1.1.10",
       "metadata": {
         "description": "Static private IP Address for Master node"
       }
     },
     "ComputeNodeStaticIPAddressPrefix": {
       "type": "string",
-      "defaultValue": "10.0.2",
+      "defaultValue": "10.1.1",
       "metadata": {
         "description": "The first 3 octets of the Compute Node Static IP Addresses"
       }
     },
     "CNodeStaticIPAddress4thOctetIndex": {
       "type": "int",
-      "defaultValue": 21,
+      "defaultValue": 11,
       "metadata": {
         "description": "The offset amount for the last octect of the Static IP Addresses"
       }
@@ -201,12 +148,17 @@
     "namingInfix": "[toLower(substring(concat(parameters('vmPrefix'), uniqueString(resourceGroup().id)), 0, 9))]",
     "longNamingInfix": "[toLower(parameters('vmPrefix'))]",
     "newStorageAccountSuffix": "[concat(variables('longNamingInfix'), 'sa')]",
-    "vnetID": "[resourceId(parameters('existingVNetResourceGroup'), 'Microsoft.Network/virtualNetworks', parameters('existingVNetName'))]",
-    "SubnetRef": "[concat(variables('vnetID'),'/subnets/', parameters('existingSubnetName'))]",
-    "masterBoxName": "[concat(variables('longNamingInfix'), 'master')]",
+    "virtualNetworkName": "grid-vnet",
+    "vnetID": "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]",
+    "addressPrefix": "10.1.1.0/24",
+    "computeSubnetPrefix": "10.1.1.0/25",
+    "computeSubnetRef": "[concat(variables('vnetID'),'/subnets/computeSubnet/')]",
+    "masterBoxName": "bruce-az00",
     "DiagSAName": "[concat(uniqueString(concat(resourceGroup().id, variables('newStorageAccountSuffix'), 'masterboxsadiag')), 'diag')]",
     "MasterIPConfigName": "[concat(variables('masterBoxName'), 'ipconfig')]",
     "MasterNicName": "[concat(variables('masterBoxName'), 'nic')]",
+    "publicIPAddressName": "[concat(variables('masterBoxName'), 'pip')]",
+    "publicIPDomainName": "[variables('namingInfix')]",
     "osType": "linux",
     "MasterimageReference": "[variables('computeImages')[parameters('masterImage')]]",
     "sshKeyPath": "[concat('/home/',parameters('adminUserName'),'/.ssh/authorized_keys')]",
@@ -257,9 +209,6 @@
     "linuxConfiguration": "[variables(concat('linuxConfiguration_',parameters('authenticationType')))]",
     "storageAccountType": "Standard_LRS",
     "NodeimageReference": "[variables('computeImages')[parameters('computeNodeImage')]]",
-    "vmssnamingInfix": "[toLower(take(concat(parameters('vmPrefix'), uniqueString(resourceGroup().id)), 9))]",
-    "NodenicName": "[concat(variables('vmssnamingInfix'), 'nic')]",
-    "NodeipConfigName": "[concat(variables('vmssnamingInfix'), 'ipconfig')]",
     "dataDiskArray": [
       {
         "diskSizeGB": "[parameters('datadiskSize')]",
@@ -344,13 +293,13 @@
     ],
     "mastervmScripts": {
       "scriptsToDownload": [
-        "https://raw.githubusercontent.com/grandparoach/simpleMPIPOC/Cat/master-setup.sh"
+        "https://raw.githubusercontent.com/grandparoach/simpleMPIPOC/CDAD/master-setup.sh"
       ],
       "commandToExecute": "bash master-setup.sh"
     },
     "vmScripts": {
       "scriptsToDownload": [
-        "https://raw.githubusercontent.com/grandparoach/simpleMPIPOC/Cat/cn-setup.sh"
+        "https://raw.githubusercontent.com/grandparoach/simpleMPIPOC/CDAD/cn-setup.sh"
       ],
       "commandToExecute": "[concat('bash cn-setup.sh ', variables('masterBoxName'))]"
     },
@@ -361,6 +310,27 @@
     }
   },  
   "resources": [
+    {
+      "type": "Microsoft.Network/virtualNetworks",
+      "name": "[variables('virtualNetworkName')]",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-03-30",
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[variables('addressPrefix')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "computeSubnet",
+            "properties": {
+              "addressPrefix": "[variables('computeSubnetPrefix')]"
+            }
+          }
+        ]
+      }
+    },
     {
       "type": "Microsoft.Storage/storageAccounts",
       "name": "[variables('DiagSAName')]",
@@ -384,11 +354,21 @@
       }
     },
     {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[variables('publicIPAddressName')]",
+      "location": "[variables('location')]",
+      "apiVersion": "2016-03-30",
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic"
+      }
+    },
+    {
       "type": "Microsoft.Network/networkInterfaces",
       "name": "[variables('MasterNicName')]",
       "location": "[variables('location')]",
       "apiVersion": "2016-03-30",
       "dependsOn": [
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]"
       ],
       "properties": {
         "ipConfigurations": [
@@ -397,8 +377,11 @@
             "properties": {
               "privateIPAllocationMethod": "Static",
               "privateIPAddress": "[parameters('MasterStaticIPAddress')]",
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]"
+              }, 
               "subnet": {
-                "id": "[variables('SubnetRef')]"
+                "id": "[variables('computeSubnetRef')]"
               }
             }
           }
@@ -472,13 +455,27 @@
         }
       }
     },
-
-
+    {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[concat(variables('publicIPAddressName'), padleft(copyindex(1), 2, '0'))]",
+      "location": "[variables('location')]",
+      "apiVersion": "2016-03-30",
+      "copy": {
+        "name": "computeNodePubIPCopy",
+        "count": "[parameters('computeNodeCount')]"
+      },
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic"
+      }
+    },
     {
       "apiVersion": "2015-06-15",
       "type": "Microsoft.Network/networkInterfaces",
-      "name": "[concat(parameters('vmPrefix'), '-cn-nic', padLeft(copyindex(1), 2, '0'))]",
+      "name": "[concat('bruce-nic-az', padLeft(copyindex(1), 2, '0'))]",
       "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'), padleft(copyindex(1), 2, '0'))]"
+      ],
       "copy": {
         "name": "computeNodeNicCopy",
         "count": "[parameters('computeNodeCount')]"
@@ -490,8 +487,11 @@
             "properties": {
               "privateIPAllocationMethod": "Static",
               "privateIPAddress": "[concat(parameters('ComputeNodeStaticIPAddressPrefix'),'.', copyindex(parameters('CNodeStaticIPAddress4thOctetIndex')))]",
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', concat(variables('publicIPAddressName'), padleft(copyindex(1), 2, '0')))]"
+              }, 
               "subnet": {
-                "id": "[variables('SubnetRef')]"
+                "id": "[variables('computeSubnetRef')]"
               }
             }
           }
@@ -502,11 +502,11 @@
     {
       "apiVersion": "2016-04-30-preview",
       "type": "Microsoft.Compute/virtualMachines",
-      "name": "[concat(parameters('vmPrefix'),'-cn', padLeft(copyindex(1), 2, '0'))]",
+      "name": "[concat('bruce-az', padLeft(copyindex(1), 2, '0'))]",
       "location": "[resourceGroup().location]",
       "dependsOn": [  
         "[concat('Microsoft.Compute/availabilitySets/', variables('AvailabilitySetSettings').name)]",
-        "[concat('Microsoft.Network/networkInterfaces/', parameters('vmPrefix'), '-cn-nic', padLeft(copyindex(1), 2, '0'))]"
+        "[concat('Microsoft.Network/networkInterfaces/', 'bruce-nic-az', padLeft(copyindex(1), 2, '0'))]"
       ],
       "copy": {
         "name": "computeNodeVmCopy",
@@ -520,7 +520,7 @@
           "vmSize": "[parameters('CompNodeVMsku')]"
         },
         "osProfile": {
-          "computerName": "[concat(parameters('vmPrefix'),'-cn', padLeft(copyindex(1), 2, '0'))]",
+          "computerName": "[concat('bruce-az', padLeft(copyindex(1), 2, '0'))]",
           "adminUsername": "[parameters('adminUserName')]",
           "adminPassword": "[parameters('adminPassword')]",
           "linuxConfiguration": "[variables('linuxConfiguration')]"
@@ -540,7 +540,7 @@
         "networkProfile": {
           "networkInterfaces": [
             {
-              "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(parameters('vmPrefix'), '-cn-nic', padLeft(copyindex(1), 2, '0')))]"
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', concat('bruce-nic-az', padLeft(copyindex(1), 2, '0')))]"
             }
           ]
         }
@@ -549,10 +549,10 @@
     {
       "apiVersion": "2015-06-15",
       "type": "Microsoft.Compute/virtualMachines/extensions",
-      "name": "[concat(parameters('vmPrefix'),'-cn', padLeft(copyindex(1), 2, '0'), '/init')]",
+      "name": "[concat('bruce-az', padLeft(copyindex(1), 2, '0'), '/ext')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[concat('Microsoft.Compute/virtualMachines/', concat(parameters('vmPrefix'), '-cn', padLeft(copyindex(1), 2, '0')))]",
+        "[concat('Microsoft.Compute/virtualMachines/', 'bruce-az', padLeft(copyindex(1), 2, '0'))]",
         "[concat('Microsoft.Compute/virtualMachines/', variables('masterBoxName'),'/extensions/ext')]"
       ],
       "copy": {
