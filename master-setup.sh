@@ -9,8 +9,9 @@ fi
 
 
 # Shares
-SHARE_HOME=/share/home
-NFS_DATA=/share/data
+SHARE_HOME=/HOMES
+SHARE_APPS=/apps
+NFS_DATA=/cm/shared
 
 # User
 HPC_USER=hpcuser
@@ -97,13 +98,17 @@ setup_disks()
 	dataDevices="`fdisk -l | grep '^Disk /dev/' | grep $dataDiskSize | awk '{print $2}' | awk -F: '{print $1}' | sort | head -$nbDisks | tr '\n' ' ' | sed 's|/dev/||g'`"
     
     mkdir -p $SHARE_HOME
+    mkdir -p $SHARE_APPS
+    mkdir -p /cm
+    mkdir -p /cm/local
 	mkdir -p $NFS_DATA
+
 	setup_data_disks $NFS_DATA "xfs" "$dataDevices" "nfsdata"
 
     chown $HPC_USER:$HPC_GROUP $NFS_DATA
 	
 	echo "$NFS_DATA    *(rw,async)" >> /etc/exports
-
+    echo "$SHARE_APPS  *(rw,async)" >> /etc/exports
     echo "$SHARE_HOME  *(rw,async)" >> /etc/exports
     
     systemctl enable rpcbind || echo "Already enabled"
