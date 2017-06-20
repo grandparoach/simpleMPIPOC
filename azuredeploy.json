@@ -161,10 +161,8 @@
     "virtualNetworkName": "grid-vnet",
     "vnetID": "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]",
     "addressPrefix": "172.0.0.0/20",
-    "computeSubnetPrefix": "172.0.0.0/21",
-    "storageSubnetPrefix": "172.0.10.0/25",
-    "infraSubnetPrefix": "172.0.8.0/28",
-    "gatewaySubnetPrefix": "172.0.9.0/29",
+    "computeSubnetPrefix": "10.0.0.0/16",
+    "infraSubnetPrefix": "10.0.0.0/24",
     "infraSubnetRef": "[concat(variables('vnetID'),'/subnets/infraSubnet/')]",
     "nsgName": "nsg-master",
     "masterBoxName": "[concat(variables('longNamingInfix'), 'master')]",
@@ -344,27 +342,9 @@
         },
         "subnets": [
           {
-            "name": "computeSubnet",
-            "properties": {
-              "addressPrefix": "[variables('computeSubnetPrefix')]"
-            }
-          },
-          {
-            "name": "storageSubnet",
-            "properties": {
-              "addressPrefix": "[variables('storageSubnetPrefix')]"
-            }
-          },
-          {
             "name": "infraSubnet",
             "properties": {
               "addressPrefix": "[variables('infraSubnetPrefix')]"
-            }
-          },
-          {
-            "name": "GatewaySubnet",
-            "properties": {
-              "addressPrefix": "[variables('gatewaySubnetPrefix')]"
             }
           }
         ]
