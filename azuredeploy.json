@@ -390,6 +390,15 @@
       }
     },
     {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[variables('publicIPAddressName')]",
+      "location": "[variables('location')]",
+      "apiVersion": "2016-03-30",
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic"
+      }
+    },
+    {
       "type": "Microsoft.Network/networkInterfaces",
       "name": "[variables('MasterNicName')]",
       "location": "[variables('location')]",
