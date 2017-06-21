@@ -499,6 +499,9 @@
       "type": "Microsoft.Network/networkInterfaces",
       "name": "[concat(parameters('vmPrefix'), '-cn-nic', padLeft(copyindex(1), 2, '0'))]",
       "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]"
+      ],
       "copy": {
         "name": "computeNodeNicCopy",
         "count": "[parameters('computeNodeCount')]"
