@@ -124,7 +124,7 @@ EOF
 wait_for_master_nfs()
 {
     while true; do
-        showmount -e master | grep '^/share/home'
+        showmount -e $MASTER_HOSTNAME | grep '^/share/home'
         if [ $? -eq 0 ]; then
             break;
         fi
@@ -181,11 +181,11 @@ setup_shares()
         mkdir -p $SHARE_DATA
         mkdir -p $SHARE_SCRATCH
 
-        echo "master:$SHARE_HOME $SHARE_HOME    nfs4    rw,auto,_netdev 0 0" >> /etc/fstab
-        echo "master:$SHARE_DATA $SHARE_DATA    nfs4    rw,auto,_netdev 0 0" >> /etc/fstab
+        echo "$MASTER_HOSTNAME:$SHARE_HOME $SHARE_HOME    nfs4    rw,auto,_netdev 0 0" >> /etc/fstab
+        echo "$MASTER_HOSTNAME:$SHARE_DATA $SHARE_DATA    nfs4    rw,auto,_netdev 0 0" >> /etc/fstab
 
         if [ "$CLUSTERFS" == "None" ]; then
-            echo "master:$SHARE_SCRATCH $SHARE_SCRATCH    nfs4    rw,auto,_netdev 0 0" >> /etc/fstab
+            echo "$MASTER_HOSTNAME:$SHARE_SCRATCH $SHARE_SCRATCH    nfs4    rw,auto,_netdev 0 0" >> /etc/fstab
         fi
 
         mkdir -p $CLUSTERFS_STORAGE_PATH
