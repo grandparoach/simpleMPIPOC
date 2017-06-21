@@ -147,9 +147,31 @@
     "nbDataDisks": {
       "type": "int",
       "defaultValue": 8,
+      "minValue": 2,
       "maxValue": 16,
       "metadata": {
         "description": "The number of disks to attach to the NFS server."
+      }
+    },
+    "MasterStaticIPAddress": {
+      "type": "string",
+      "defaultValue": "10.0.0.4",
+      "metadata": {
+        "description": "Static private IP Address for Master node"
+      }
+    },
+    "ComputeNodeStaticIPAddressPrefix": {
+      "type": "string",
+      "defaultValue": "10.0.0",
+      "metadata": {
+        "description": "The first 3 octets of the Compute Node Static IP Addresses"
+      }
+    },
+    "CNodeStaticIPAddress4thOctetIndex": {
+      "type": "int",
+      "defaultValue": 5,
+      "metadata": {
+        "description": "The offset amount for the last octect of the Static IP Addresses"
       }
     }
   },
@@ -160,16 +182,14 @@
     "newStorageAccountSuffix": "[concat(variables('longNamingInfix'), 'sa')]",
     "virtualNetworkName": "grid-vnet",
     "vnetID": "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]",
-    "addressPrefix": "10.0.0.0/16",
+    "addressPrefix": "10.0.0.0/20",
     "infraSubnetPrefix": "10.0.0.0/24",
-    "infraSubnetRef": "[concat(variables('vnetID'),'/subnets/infraSubnet/')]",
-    "nsgName": "nsg-master",
+    "SubnetRef": "[concat(variables('vnetID'),'/subnets/infraSubnet/')]",
     "masterBoxName": "[concat(variables('longNamingInfix'), 'master')]",
     "DiagSAName": "[concat(uniqueString(concat(resourceGroup().id, variables('newStorageAccountSuffix'), 'masterboxsadiag')), 'diag')]",
+    "publicIPAddressName": "[concat(variables('masterBoxName'), 'pip')]",
     "MasterIPConfigName": "[concat(variables('masterBoxName'), 'ipconfig')]",
     "MasterNicName": "[concat(variables('masterBoxName'), 'nic')]",
-    "publicIPAddressName": "[concat(variables('masterBoxName'), 'pip')]",
-    "publicIPDomainName": "[variables('namingInfix')]",
     "osType": "linux",
     "MasterimageReference": "[variables('computeImages')[parameters('masterImage')]]",
     "sshKeyPath": "[concat('/home/',parameters('adminUserName'),'/.ssh/authorized_keys')]",
@@ -205,7 +225,6 @@
         "version": "latest"
       }
     },
-
     "linuxConfiguration_sshPublicKey": {
       "disablePasswordAuthentication": "true",
       "ssh": {
@@ -219,16 +238,11 @@
     },
     "linuxConfiguration_password": { },
     "linuxConfiguration": "[variables(concat('linuxConfiguration_',parameters('authenticationType')))]",
-    
-    
     "storageAccountType": "Standard_LRS",
-    
-    
     "NodeimageReference": "[variables('computeImages')[parameters('computeNodeImage')]]",
     "vmssnamingInfix": "[toLower(take(concat(parameters('vmPrefix'), uniqueString(resourceGroup().id)), 9))]",
     "NodenicName": "[concat(variables('vmssnamingInfix'), 'nic')]",
     "NodeipConfigName": "[concat(variables('vmssnamingInfix'), 'ipconfig')]",
-    
     "dataDiskArray": [
       {
         "diskSizeGB": "[parameters('datadiskSize')]",
@@ -324,10 +338,36 @@
         "https://raw.githubusercontent.com/grandparoach/simpleMPIPOC/slurm/cn-setup.sh"
       ],
       "commandToExecute": "[concat('bash cn-setup.sh ', variables('masterBoxName'), ' ', parameters('vmPrefix'), ' ', parameters('computeNodeCount'), ' hpcuser ', variables('templateBaseUrl'), ' None Local')]"
+    }, 
+    "AvailabilitySetSettings": {
+      "name": "ComputeNodeAvailabilitySet",
+      "faultDomainCount": "3",
+      "updateDomainCount": "5"
     }
   },  
-
   "resources": [
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[variables('DiagSAName')]",
+      "location": "[variables('location')]",
+      "apiVersion": "2015-06-15",
+      "properties": {
+        "accountType": "Standard_LRS"
+      }
+    },
+    {
+      "apiVersion": "2016-04-30-preview",
+      "type": "Microsoft.Compute/availabilitySets",
+         "sku": {
+            "name": "Aligned"
+         },
+      "name": "[variables('AvailabilitySetSettings').name]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "platformFaultDomainCount": "[variables('AvailabilitySetSettings').faultDomainCount]",
+        "platformUpdateDomainCount": "[variables('AvailabilitySetSettings').updateDomainCount]"
+      }
+    },
     {
       "type": "Microsoft.Network/virtualNetworks",
       "name": "[variables('virtualNetworkName')]",
@@ -350,24 +390,6 @@
       }
     },
     {
-      "type": "Microsoft.Storage/storageAccounts",
-      "name": "[variables('DiagSAName')]",
-      "location": "[variables('location')]",
-      "apiVersion": "2015-06-15",
-      "properties": {
-        "accountType": "Standard_LRS"
-      }
-    },
-    {
-      "type": "Microsoft.Network/publicIPAddresses",
-      "name": "[variables('publicIPAddressName')]",
-      "location": "[variables('location')]",
-      "apiVersion": "2016-03-30",
-      "properties": {
-        "publicIPAllocationMethod": "Dynamic"
-      }
-    },
-    {
       "type": "Microsoft.Network/networkInterfaces",
       "name": "[variables('MasterNicName')]",
       "location": "[variables('location')]",
@@ -381,19 +403,19 @@
           {
             "name": "[variables('MasterIPConfigName')]",
             "properties": {
-              "privateIPAllocationMethod": "Dynamic",
+              "privateIPAllocationMethod": "Static",
+              "privateIPAddress": "[parameters('MasterStaticIPAddress')]",
               "publicIPAddress": {
                 "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]"
               }, 
               "subnet": {
-                "id": "[variables('infraSubnetRef')]"
+                "id": "[variables('SubnetRef')]"
               }
             }
           }
         ]
       }
     },
-
     {
       "type": "Microsoft.Compute/virtualMachines",
       "name": "[variables('masterBoxName')]",
@@ -438,9 +460,7 @@
           }
         }
       }
-    },
-    
-     
+    }, 
     {
       "type": "Microsoft.Compute/virtualMachines/extensions",
       "name": "[concat(variables('masterBoxName'), '/ext')]",
@@ -455,7 +475,8 @@
         "typeHandlerVersion": "2.0",
         "autoUpgradeMinorVersion": true,
         "settings": {
-          "fileUris": "[variables('mastervmScripts').scriptsToDownload]"
+          "fileUris": "[variables('mastervmScripts').scriptsToDownload]",
+          "timestamp": 12
         },
         "protectedSettings": {
           "commandToExecute": "[variables('mastervmScripts').commandToExecute]"
@@ -465,78 +486,98 @@
 
 
     {
-      "type": "Microsoft.Compute/virtualMachineScaleSets",
-      "name": "[parameters('vmPrefix')]",
-      "location": "[variables('location')]",
-      "apiVersion": "2016-04-30-preview",
-      "sku": {
-        "name": "[parameters('CompNodeVMsku')]",
-        "tier": "Standard",
-        "capacity": "[parameters('computeNodeCount')]"
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[concat(parameters('vmPrefix'), '-cn-nic', padLeft(copyindex(1), 2, '0'))]",
+      "location": "[resourceGroup().location]",
+      "copy": {
+        "name": "computeNodeNicCopy",
+        "count": "[parameters('computeNodeCount')]"
       },
-      "dependsOn": [
-        "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]",
-        "[concat('Microsoft.Compute/virtualMachines/', variables('masterBoxName'),'/extensions/ext')]"
-      ],
       "properties": {
-        "overprovision": "false",
-        "upgradePolicy": {
-          "mode": "Manual"
-        },
-        "virtualMachineProfile": {
-          "networkProfile": {
-            "networkInterfaceConfigurations": [
-              {
-                "name": "[variables('NodenicName')]",
-                "properties": {
-                  "primary": "true",
-                  "ipConfigurations": [
-                    {
-                      "name": "[variables('NodeipConfigName')]",
-                      "properties": {
-                        "subnet": {
-                            "id": "[variables('infraSubnetRef')]"
-                        }
-                      }
-                    }
-                  ]
-                }
+        "ipConfigurations": [
+          {
+            "name": "computeNodeIp",
+            "properties": {
+              "privateIPAllocationMethod": "Static",
+              "privateIPAddress": "[concat(parameters('ComputeNodeStaticIPAddressPrefix'),'.', copyindex(parameters('CNodeStaticIPAddress4thOctetIndex')))]",
+              "subnet": {
+                "id": "[variables('SubnetRef')]"
               }
-            ]
-          },
-          "osProfile": {
-            "computerNamePrefix": "[variables('vmssnamingInfix')]",
-            "adminUsername": "[parameters('adminUserName')]",
-            "adminPassword": "[parameters('adminPassword')]",
-            "linuxConfiguration": "[variables('linuxConfiguration')]"
-          },
-          "storageProfile": {
-            "imageReference": "[variables('NodeimageReference')]",  
-            "osDisk": {
-              "caching": "ReadOnly",
-              "createOption": "FromImage",
-              "managedDisk": {
+            }
+          }
+        ]
+      }
+    },
+
+    {
+      "apiVersion": "2016-04-30-preview",
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[concat(parameters('vmPrefix'), padLeft(copyindex(1), 2, '0'))]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [  
+        "[concat('Microsoft.Compute/availabilitySets/', variables('AvailabilitySetSettings').name)]",
+        "[concat('Microsoft.Network/networkInterfaces/', parameters('vmPrefix'), '-cn-nic', padLeft(copyindex(1), 2, '0'))]"
+      ],
+      "copy": {
+        "name": "computeNodeVmCopy",
+        "count": "[parameters('computeNodeCount')]"
+      },
+      "properties": {
+        "availabilitySet": {
+          "id": "[resourceId('Microsoft.Compute/availabilitySets', variables('AvailabilitySetSettings').name)]"
+        },
+        "hardwareProfile": {
+          "vmSize": "[parameters('CompNodeVMsku')]"
+        },
+        "osProfile": {
+          "computerName": "[concat(parameters('vmPrefix'), padLeft(copyindex(1), 2, '0'))]",
+          "adminUsername": "[parameters('adminUserName')]",
+          "adminPassword": "[parameters('adminPassword')]",
+          "linuxConfiguration": "[variables('linuxConfiguration')]"
+        },
+        "storageProfile": {
+          "imageReference": "[variables('NodeimageReference')]", 
+           "osDisk": {
+            "caching": "ReadOnly",
+            "createOption": "FromImage",
+             "managedDisk": {
                 "storageAccountType": "Standard_LRS"
              }
-            }
-          },
-          "extensionProfile": {
-            "extensions": [
-              {
-                "name": "installCN",
-                "properties": {
-                  "publisher": "Microsoft.Azure.Extensions",
-                  "type": "CustomScript",
-                  "typeHandlerVersion": "2.0",
-                  "autoUpgradeMinorVersion": true,
-                  "settings": {
-                    "fileUris": "[variables('vmScripts').scriptsToDownload]",
-                    "commandToExecute": "[variables('vmScripts').commandToExecute]"
-                  }
-                }
-              }
-            ]
           }
+          
+          
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(parameters('vmPrefix'), '-cn-nic', padLeft(copyindex(1), 2, '0')))]"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "name": "[concat(parameters('vmPrefix'), padLeft(copyindex(1), 2, '0'), '/init')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Compute/virtualMachines/', concat(parameters('vmPrefix'), padLeft(copyindex(1), 2, '0')))]",
+        "[concat('Microsoft.Compute/virtualMachines/', variables('masterBoxName'),'/extensions/ext')]"
+      ],
+      "copy": {
+        "name": "computeNodeExtensionsCopy",
+        "count": "[parameters('computeNodeCount')]"
+      },
+      "properties": {
+         "publisher": "Microsoft.Azure.Extensions",
+        "type": "CustomScript",
+        "typeHandlerVersion": "2.0",
+        "autoUpgradeMinorVersion": true,
+        "settings": {
+          "fileUris": "[variables('vmScripts').scriptsToDownload]",
+          "commandToExecute": "[variables('vmScripts').commandToExecute]"
         }
       }
     }
