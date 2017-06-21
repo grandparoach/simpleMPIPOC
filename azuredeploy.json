@@ -312,19 +312,19 @@
         "createOption": "Empty"
       }
     ],
-    
+    "templateBaseUrl": "https://raw.githubusercontent.com/grandparoach/simpleMPIPOC/slurm/",
     "mastervmScripts": {
       "scriptsToDownload": [
         "https://raw.githubusercontent.com/grandparoach/simpleMPIPOC/slurm/master-setup.sh"
       ],
-      "commandToExecute": "bash master-setup.sh"
+      "commandToExecute": "[concat('bash azuredeploy.sh ', variables('masterBoxName'), ' ', parameters('vmPrefix'), ' ', parameters('computeNodeCount'), ' hpcuser ', variables('templateBaseUrl'), ' None  Local')]"
     },
     
     "vmScripts": {
       "scriptsToDownload": [
         "https://raw.githubusercontent.com/grandparoach/simpleMPIPOC/slurm/cn-setup.sh"
       ],
-      "commandToExecute": "[concat('bash cn-setup.sh ', variables('masterBoxName'))]"
+      "commandToExecute": "[concat('bash azuredeploy.sh ', variables('masterBoxName'), ' ', parameters('vmPrefix'), ' ', parameters('computeNodeCount'), ' hpcuser ', variables('templateBaseUrl'), ' None Local')]"
     }
   },  
 
