@@ -140,6 +140,7 @@
         "CentOS_6.7",
         "CentOS_7.2",
         "CentOS-HPC_7.1",
+        "CentOS-HPC_7.3",
         "RHEL_7.2"
       ],
       "metadata": {
