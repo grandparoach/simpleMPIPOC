@@ -40,54 +40,6 @@
         "description": "The VM image of the master nodes"
       }
     },
-    "AnalyticsVMsku": {
-      "type": "string",
-      "defaultValue": "Standard_H16",
-      "allowedValues": [
-        "Standard_A8",
-        "Standard_A9",
-        "Standard_D2_v2",
-        "Standard_D3_v2",
-        "Standard_D4_v2",
-        "Standard_D5_v2",
-        "Standard_D11_v2",
-        "Standard_D12_v2",
-        "Standard_D13_v2",
-        "Standard_D14_v2",
-        "Standard_D15_v2",
-        "Standard_DS2_v2",
-        "Standard_DS3_v2",
-        "Standard_DS4_v2",
-        "Standard_DS5_v2",
-        "Standard_DS11_v2",
-        "Standard_DS12_v2",
-        "Standard_DS13_v2",
-        "Standard_DS14_v2",
-        "Standard_DS15_v2",
-        "Standard_F4",
-        "Standard_F8",
-        "Standard_F16",
-        "Standard_F4s",
-        "Standard_F8s",
-        "Standard_F16s",
-        "Standard_H8",
-        "Standard_H16",
-        "Standard_H8m",
-        "Standard_H16m",
-        "Standard_H16r",
-        "Standard_H16mr",
-        "Standard_NC6",
-        "Standard_NC12",
-        "Standard_NC24",
-        "Standard_NC24r",
-        "Standard_NV6",
-        "Standard_NV12",
-        "Standard_NV24"
-      ],
-      "metadata": {
-        "description": "Instance type to use for the analytics node"
-      }
-    },
     "CompNodeVMsku": {
       "type": "string",
       "defaultValue": "Standard_H16r",
@@ -133,17 +85,26 @@
         "description": "Instance type to use for the compute nodes"
       }
     },
-    "computeNodeImage": {
+     "osType": {
       "type": "string",
-      "defaultValue": "CentOS-HPC_7.1",
       "allowedValues": [
-        "CentOS_6.7",
-        "CentOS_7.2",
-        "CentOS-HPC_7.1",
-        "RHEL_7.2"
+        "Windows",
+        "Linux"
       ],
       "metadata": {
-        "description": "The VM image of the compute nodes"
+        "description": "The operating system type of the private OS image."
+      }
+    },
+     "existingManagedImageResourceGroup": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of the Resource Group containing the Image that instances of the VM Scale Set will be created from. Images can be created by capturing Azure VMs."
+      }
+    },
+    "existingManagedImageName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of the Image that instances of the VM Scale Set will be created from. Images can be created by capturing Azure VMs."
       }
     },
     "computeNodeCount": {
@@ -216,7 +177,6 @@
     "infraSubnetRef": "[concat(variables('vnetID'),'/subnets/infraSubnet/')]",
     "nsgName": "nsg-master",
     "masterBoxName": "[concat(variables('longNamingInfix'), 'master')]",
-    "SAName": "[concat(uniqueString(concat(resourceGroup().id, variables('newStorageAccountSuffix'), 'masterboxsa')), 'master')]",
     "DiagSAName": "[concat(uniqueString(concat(resourceGroup().id, variables('newStorageAccountSuffix'), 'masterboxsadiag')), 'diag')]",
     "MasterIPConfigName": "[concat(variables('masterBoxName'), 'ipconfig')]",
     "MasterNicName": "[concat(variables('masterBoxName'), 'nic')]",
@@ -257,7 +217,7 @@
         "version": "latest"
       }
     },
-
+    "managedImageId": "[resourceId(parameters('existingManagedImageResourceGroup'), 'Microsoft.Compute/images', parameters('existingManagedImageName'))]",
     "linuxConfiguration_sshPublicKey": {
       "disablePasswordAuthentication": "true",
       "ssh": {
@@ -371,7 +331,6 @@
       "commandToExecute": "bash master-setup.sh"
     },
     
-    "cnSetupScript": "cn-setup.sh",
     "vmScripts": {
       "scriptsToDownload": [
         "https://raw.githubusercontent.com/grandparoach/simpleMPIPOC/NOAA/cn-setup.sh"
@@ -422,15 +381,6 @@
     },
     {
       "type": "Microsoft.Storage/storageAccounts",
-      "name": "[variables('SAName')]",
-      "location": "[variables('location')]",
-      "apiVersion": "2015-06-15",
-      "properties": {
-        "accountType": "Premium_LRS"
-      }
-    },
-    {
-      "type": "Microsoft.Storage/storageAccounts",
       "name": "[variables('DiagSAName')]",
       "location": "[variables('location')]",
       "apiVersion": "2015-06-15",
@@ -444,10 +394,7 @@
       "location": "[variables('location')]",
       "apiVersion": "2016-03-30",
       "properties": {
-        "publicIPAllocationMethod": "Dynamic",
-        "dnsSettings": {
-          "domainNameLabel": "[variables('publicIPDomainName')]"
-        }
+        "publicIPAllocationMethod": "Dynamic"
       }
     },
     {
@@ -456,7 +403,8 @@
       "location": "[variables('location')]",
       "apiVersion": "2016-03-30",
       "dependsOn": [
-        "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]"
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]",
+        "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]"
       ],
       "properties": {
         "ipConfigurations": [
@@ -483,7 +431,6 @@
       "apiVersion": "2016-04-30-preview",
       "dependsOn": [
         "[concat('Microsoft.Network/networkinterfaces/', variables('MasterNicName'))]",
-        "[concat('Microsoft.Storage/storageAccounts/', variables('SAName'))]",
         "[concat('Microsoft.Storage/storageAccounts/', variables('DiagSAName'))]"
       ],
       "properties": {
@@ -538,126 +485,15 @@
         "typeHandlerVersion": "2.0",
         "autoUpgradeMinorVersion": true,
         "settings": {
-          "fileUris": "[variables('mastervmScripts').scriptsToDownload]",
-          "timestamp": 12
+          "fileUris": "[variables('mastervmScripts').scriptsToDownload]"
         },
         "protectedSettings": {
           "commandToExecute": "[variables('mastervmScripts').commandToExecute]"
         }
       }
     },
-    {
-      "type": "Microsoft.Network/publicIPAddresses",
-      "name": "Analytics-pip",
-      "location": "[variables('location')]",
-      "apiVersion": "2016-03-30",
-      "properties": {
-        "publicIPAllocationMethod": "Dynamic",
-        "dnsSettings": {
-          "domainNameLabel": "[toLower(substring(concat(parameters('vmPrefix'), '-Analytics', uniqueString(resourceGroup().id)), 0, 9))]"
-        }
-      }
-    },
-    {
-      "type": "Microsoft.Network/networkInterfaces",
-      "name": "Analytics-nic",
-      "location": "[variables('location')]",
-      "apiVersion": "2016-03-30",
-      "dependsOn": [
-        "Microsoft.Network/publicIPAddresses/Analytics-pip"
-      ],
-      "properties": {
-        "ipConfigurations": [
-          {
-            "name": "Analytics-IPconfig",
-            "properties": {
-              "privateIPAllocationMethod": "Dynamic",
-              "publicIPAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIPAddresses', 'Analytics-pip')]"
-              }, 
-              "subnet": {
-                "id": "[variables('infraSubnetRef')]"
-              }
-            }
-          }
-        ]
-      }
-    },
-    {
-      "type": "Microsoft.Compute/virtualMachines",
-      "name": "AnalyticsSvr",
-      "location": "[variables('location')]",
-      "apiVersion": "2016-04-30-preview",
-      "dependsOn": [
-        "Microsoft.Network/networkinterfaces/Analytics-nic",
-        "[concat('Microsoft.Storage/storageAccounts/', variables('SAName'))]",
-        "[concat('Microsoft.Storage/storageAccounts/', variables('DiagSAName'))]"
-      ],
-      "properties": {
-        "hardwareProfile": {
-          "vmSize": "[parameters('AnalyticsVMsku')]"
-        },
-        "osProfile": {
-          "computerName": "AnalyticsSvr",
-          "adminUsername": "[parameters('adminUserName')]",
-          "adminPassword": "[parameters('adminPassword')]",
-          "linuxConfiguration": "[variables('linuxConfiguration')]"
-        },
-        "storageProfile": {
-          "imageReference": {
-             "publisher": "microsoft-ads",
-             "offer": "linux-data-science-vm",
-             "sku": "linuxdsvm",
-             "version": "latest"
-          },
-          "osDisk": {
-            "caching": "ReadOnly",
-            "createOption": "FromImage",
-             "managedDisk": {
-                "storageAccountType": "Standard_LRS"
-             }
-          }
-        },
-        "networkProfile": {
-          "networkInterfaces": [
-            {
-               "id": "[resourceId('Microsoft.Network/networkInterfaces', 'Analytics-nic')]"
-            }
-          ]
-        },
-        "diagnosticsProfile": {
-          "bootDiagnostics": {
-            "enabled": "true",
-           "storageUri": "[concat('http://',variables('DiagSAName'),'.blob.core.windows.net')]"
-          }
-        }
-      }
-    },
     
-     
-    {
-      "type": "Microsoft.Compute/virtualMachines/extensions",
-      "name": "AnalyticsSvr/ext",
-      "apiVersion": "2015-06-15",
-      "location": "[resourceGroup().location]",
-      "dependsOn": [
-        "Microsoft.Compute/virtualMachines/AnalyticsSvr",
-         "[concat(variables('masterBoxName'), '/ext')]"
-      ],
-      "properties": {
-        "publisher": "Microsoft.Azure.Extensions",
-        "type": "CustomScript",
-        "typeHandlerVersion": "2.0",
-        "autoUpgradeMinorVersion": true,
-        "settings": {
-          "fileUris": "[variables('vmScripts').scriptsToDownload]",
-          "timestamp": 12
-        },
-        "protectedSettings": {
-          "commandToExecute": "[variables('vmScripts').commandToExecute]"
-        }
-      }
-    },
+
 
     {
       "type": "Microsoft.Compute/virtualMachineScaleSets",
@@ -671,10 +507,10 @@
       },
       "dependsOn": [
         "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]",
-        "[concat(variables('masterBoxName'), '/ext')]"
+        "[concat('Microsoft.Compute/virtualMachines/', variables('masterBoxName'),'/extensions/ext')]"
       ],
       "properties": {
-        "overprovision": "true",
+        "overprovision": "false",
         "upgradePolicy": {
           "mode": "Manual"
         },
@@ -705,14 +541,9 @@
             "adminPassword": "[parameters('adminPassword')]",
             "linuxConfiguration": "[variables('linuxConfiguration')]"
           },
-          "storageProfile": {
-            "imageReference": "[variables('NodeimageReference')]",  
-            "osDisk": {
-              "caching": "ReadOnly",
-              "createOption": "FromImage",
-              "managedDisk": {
-                "storageAccountType": "Standard_LRS"
-             }
+         "storageProfile": {
+            "imageReference": {
+              "id": "[variables('managedImageId')]"
             }
           },
           "extensionProfile": {
@@ -726,8 +557,7 @@
                   "autoUpgradeMinorVersion": true,
                   "settings": {
                     "fileUris": "[variables('vmScripts').scriptsToDownload]",
-                    "commandToExecute": "[variables('vmScripts').commandToExecute]",
-                    "timestamp": 12345
+                    "commandToExecute": "[variables('vmScripts').commandToExecute]"
                   }
                 }
               }
@@ -738,5 +568,19 @@
     }
   ]
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
