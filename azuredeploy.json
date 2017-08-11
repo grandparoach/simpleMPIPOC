@@ -176,10 +176,11 @@
         "description": "name of existing Virtual Network"
       }
     },
-    "dataDiskName": {
+    "dataDiskID": {
       "type": "string",
+      "defaultValue": "/subscriptions/c386bf74-5f58-48b6-afa8-d066aa101388/resourceGroups/dcltest/providers/Microsoft.Compute/disks/common-data",
       "metadata": {
-        "description": "name of the managed disk to be attached to all the nodes"
+        "description": "Resource ID of the Data Disk to be attached to all the nodes"
       }
     }
   },
@@ -380,21 +381,6 @@
       }
     },
     {
-      "type": "Microsoft.Compute/disks",
-      "name": "[parameters('dataDiskName')]",
-      "apiVersion": "2016-04-30-preview",
-      "location": "westus",
-            "scale": null,
-            "properties": {
-                "accountType": "Standard_LRS",
-                "creationData": {
-                    "createOption": "Attach"
-                },
-                "diskSizeGB": 1023
-            },
-            "dependsOn": []
-        },
-    {
       "apiVersion": "2016-04-30-preview",
       "type": "Microsoft.Compute/availabilitySets",
          "sku": {
@@ -567,7 +553,7 @@
                "caching": "None",
                "managedDisk": {
                   "storageAccountType": "Standard_LRS",
-                     "id": "[resourceId('Microsoft.Compute/disks', parameters('dataDiskName'))]"
+                     "id": "parameters('dataDiskID')"
                 },
                 "diskSizeGB": 1023
                 }
@@ -610,6 +596,7 @@
     }
   ]
 }
+
 
 
 
