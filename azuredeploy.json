@@ -30,10 +30,11 @@
     },
     "masterImage": {
       "type": "string",
-      "defaultValue": "CentOS_7.2",
+      "defaultValue": "CentOS_7.3",
       "allowedValues": [
         "CentOS_6.7",
         "CentOS_7.2",
+         "CentOS_7.3",
         "RHEL_7.2"
       ],
       "metadata": {
@@ -87,11 +88,12 @@
     },
     "computeNodeImage": {
       "type": "string",
-      "defaultValue": "CentOS-HPC_7.1",
+      "defaultValue": "CentOS-HPC_7.3",
       "allowedValues": [
         "CentOS_6.7",
         "CentOS_7.2",
         "CentOS-HPC_7.1",
+        "CentOS-HPC_7.3",
         "RHEL_7.2"
       ],
       "metadata": {
@@ -101,10 +103,10 @@
     "computeNodeCount": {
       "type": "int",
       "metadata": {
-        "description": "Number of VM instances for Compute Node Scaleset (100 or less)."
+        "description": "Number of VM instances for Compute Nodes (200 or less)."
       },
-      "defaultValue": 2,
-      "maxValue": 100
+      "defaultValue": 4,
+      "maxValue": 200
     },
     "adminUserName": {
       "type": "string",
@@ -194,10 +196,15 @@
       "metadata": {
         "description": "The offset amount for the last octect of the Static IP Addresses"
       }
+    },
+    "dataDiskName": {
+      "type": "string",
+      "metadata": {
+        "description": "name of the managed disk to be attached to all the nodes"
+      }
     }
   },
   "variables": {
-    "location": "[resourceGroup().location]",
     "namingInfix": "[toLower(substring(concat(parameters('vmPrefix'), uniqueString(resourceGroup().id)), 0, 9))]",
     "longNamingInfix": "[toLower(parameters('vmPrefix'))]",
     "newStorageAccountSuffix": "[concat(variables('longNamingInfix'), 'sa')]",
@@ -207,6 +214,8 @@
     "DiagSAName": "[concat(uniqueString(concat(resourceGroup().id, variables('newStorageAccountSuffix'), 'masterboxsadiag')), 'diag')]",
     "MasterIPConfigName": "[concat(variables('masterBoxName'), 'ipconfig')]",
     "MasterNicName": "[concat(variables('masterBoxName'), 'nic')]",
+    "publicIPAddressName": "[concat(variables('masterBoxName'), 'pip')]",
+    "publicIPDomainName": "[variables('namingInfix')]",
     "osType": "linux",
     "MasterimageReference": "[variables('computeImages')[parameters('masterImage')]]",
     "sshKeyPath": "[concat('/home/',parameters('adminUserName'),'/.ssh/authorized_keys')]",
@@ -227,6 +236,12 @@
         "publisher": "OpenLogic",
         "offer": "CentOS-HPC",
         "sku": "7.1",
+        "version": "latest"
+      },
+      "CentOS-HPC_7.3": {
+        "publisher": "OpenLogic",
+        "offer": "CentOS-HPC",
+        "sku": "7.3",
         "version": "latest"
       },
       "RHEL_7.2": {
@@ -364,12 +379,36 @@
     {
       "type": "Microsoft.Storage/storageAccounts",
       "name": "[variables('DiagSAName')]",
-      "location": "[variables('location')]",
+      "location": "[resourceGroup().location]",
       "apiVersion": "2015-06-15",
       "properties": {
         "accountType": "Standard_LRS"
       }
     },
+    {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[variables('publicIPAddressName')]",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-03-30",
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic"
+      }
+    },
+    {
+      "type": "Microsoft.Compute/disks",
+      "name": "[parameters('dataDiskName')]",
+      "apiVersion": "2016-04-30-preview",
+      "location": "westus",
+            "scale": null,
+            "properties": {
+                "accountType": "Standard_LRS",
+                "creationData": {
+                    "createOption": "Attach"
+                },
+                "diskSizeGB": 1023
+            },
+            "dependsOn": []
+        },
     {
       "apiVersion": "2016-04-30-preview",
       "type": "Microsoft.Compute/availabilitySets",
@@ -386,17 +425,20 @@
     {
       "type": "Microsoft.Network/networkInterfaces",
       "name": "[variables('MasterNicName')]",
-      "location": "[variables('location')]",
+      "location": "[resourceGroup().location]",
       "apiVersion": "2016-03-30",
       "dependsOn": [
+          "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]"
       ],
       "properties": {
         "ipConfigurations": [
           {
             "name": "[variables('MasterIPConfigName')]",
             "properties": {
-              "privateIPAllocationMethod": "Static",
-              "privateIPAddress": "[parameters('MasterStaticIPAddress')]",
+              "privateIPAllocationMethod": "Dynamic",
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]"
+              }, 
               "subnet": {
                 "id": "[variables('SubnetRef')]"
               }
@@ -408,7 +450,7 @@
     {
       "type": "Microsoft.Compute/virtualMachines",
       "name": "[variables('masterBoxName')]",
-      "location": "[variables('location')]",
+      "location": "[resourceGroup().location]",
       "apiVersion": "2016-04-30-preview",
       "dependsOn": [
         "[concat('Microsoft.Network/networkinterfaces/', variables('MasterNicName'))]",
@@ -533,8 +575,21 @@
              "managedDisk": {
                 "storageAccountType": "Standard_LRS"
              }
-          }
-          
+          },
+          "dataDisks": [
+             {
+               "lun": 0,
+               "name": "common-data",
+               "createOption": "Attach",
+               "caching": "None",
+               "managedDisk": {
+                  "storageAccountType": "Standard_LRS",
+                     "id": "[resourceId('Microsoft.Compute/disks', parameters('dataDiskName'))]"
+                },
+                "diskSizeGB": 1023
+                }
+              ]
+            
           
         },
         "networkProfile": {
@@ -572,6 +627,7 @@
     }
   ]
 }
+
 
 
 
