@@ -553,7 +553,7 @@
                "caching": "None",
                "managedDisk": {
                   "storageAccountType": "Standard_LRS",
-                     "id": "parameters('dataDiskID')"
+                     "id": "[parameters('dataDiskID')]"
                 },
                 "diskSizeGB": 1023
                 }
