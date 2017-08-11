@@ -176,27 +176,6 @@
         "description": "name of existing Virtual Network"
       }
     },
-    "MasterStaticIPAddress": {
-      "type": "string",
-      "defaultValue": "10.0.2.15",
-      "metadata": {
-        "description": "Static private IP Address for Master node"
-      }
-    },
-    "ComputeNodeStaticIPAddressPrefix": {
-      "type": "string",
-      "defaultValue": "10.0.2",
-      "metadata": {
-        "description": "The first 3 octets of the Compute Node Static IP Addresses"
-      }
-    },
-    "CNodeStaticIPAddress4thOctetIndex": {
-      "type": "int",
-      "defaultValue": 21,
-      "metadata": {
-        "description": "The offset amount for the last octect of the Static IP Addresses"
-      }
-    },
     "dataDiskName": {
       "type": "string",
       "metadata": {
@@ -230,6 +209,12 @@
         "publisher": "OpenLogic",
         "offer": "CentOS",
         "sku": "7.2",
+        "version": "latest"
+      },
+      "CentOS_7.3": {
+        "publisher": "OpenLogic",
+        "offer": "CentOS",
+        "sku": "7.3",
         "version": "latest"
       },
       "CentOS-HPC_7.1": {
@@ -506,8 +491,7 @@
         "typeHandlerVersion": "2.0",
         "autoUpgradeMinorVersion": true,
         "settings": {
-          "fileUris": "[variables('mastervmScripts').scriptsToDownload]",
-          "timestamp": 12
+          "fileUris": "[variables('mastervmScripts').scriptsToDownload]"
         },
         "protectedSettings": {
           "commandToExecute": "[variables('mastervmScripts').commandToExecute]"
@@ -530,8 +514,7 @@
           {
             "name": "computeNodeIp",
             "properties": {
-              "privateIPAllocationMethod": "Static",
-              "privateIPAddress": "[concat(parameters('ComputeNodeStaticIPAddressPrefix'),'.', copyindex(parameters('CNodeStaticIPAddress4thOctetIndex')))]",
+              "privateIPAllocationMethod": "Dynamic",
               "subnet": {
                 "id": "[variables('SubnetRef')]"
               }
@@ -627,6 +610,8 @@
     }
   ]
 }
+
+
 
 
 
