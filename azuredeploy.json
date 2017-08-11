@@ -372,6 +372,26 @@
       }
     },
     {
+      "type": "Microsoft.Compute/disks",
+      "name": "[concat('Common-data-', copyindex(1))]",
+      "apiVersion": "2016-04-30-preview",
+      "location": "[resourceGroup().location]",
+      "scale": null,
+      "copy": {
+        "name": "attachedDiskCopy",
+        "count": "[parameters('computeNodeCount')]"
+      },
+            "properties": {
+                "accountType": "Standard_LRS",
+                "creationData": {
+                    "createOption": "FromImage",
+                    "id": "[parameters('dataDiskID')]"
+                },
+                "diskSizeGB": 1023
+            },
+            "dependsOn": []
+        },
+    {
       "type": "Microsoft.Network/publicIPAddresses",
       "name": "[variables('publicIPAddressName')]",
       "location": "[resourceGroup().location]",
@@ -548,12 +568,12 @@
           "dataDisks": [
              {
                "lun": 0,
-               "name": "common-data",
-               "createOption": "FromImage",
+               "name": "[concat('DataDisk-', copyindex(1))]",
+               "createOption": "Attach",
                "caching": "None",
                "managedDisk": {
                   "storageAccountType": "Standard_LRS",
-                     "id": "[parameters('dataDiskID')]"
+                    "id": "[resourceId('Microsoft.Compute/disks', concat('Common-data-', copyindex(1)))]"
                 },
                 "diskSizeGB": 1023
                 }
@@ -596,6 +616,7 @@
     }
   ]
 }
+
 
 
 
