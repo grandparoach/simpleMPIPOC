@@ -549,7 +549,7 @@
              {
                "lun": 0,
                "name": "common-data",
-               "createOption": "Attach",
+               "createOption": "FromImage",
                "caching": "None",
                "managedDisk": {
                   "storageAccountType": "Standard_LRS",
