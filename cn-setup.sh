@@ -35,6 +35,10 @@ mount_nfs()
 	echo "${MASTER_NAME}:${NFS_ON_MASTER} ${NFS_MOUNT} nfs defaults,nofail  0 0" >> /etc/fstab
 }
 
+install_pbspro()
+{
+	bash install_pbspro.sh ${MASTER_NAME}
+}
 
 setup_user()
 {  
@@ -59,5 +63,6 @@ setup_user()
 
 mount_nfs
 setup_user
+install_pbspro
 
 exit 0
