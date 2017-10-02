@@ -350,8 +350,10 @@
     },
     "vmScripts": {
       "scriptsToDownload": [
-        "https://raw.githubusercontent.com/grandparoach/simpleMPIPOC/Cat/cn-setup.sh"
+        "https://raw.githubusercontent.com/grandparoach/simpleMPIPOC/Cat/cn-setup.sh",
+        "https://raw.githubusercontent.com/grandparoach/azure-hpc/master/Compute-Grid-Infra/PBSPro/install_pbspro.sh"
       ],
+
       "commandToExecute": "[concat('bash cn-setup.sh ', variables('masterBoxName'))]"
     },
     "AvailabilitySetSettings": {
@@ -472,7 +474,25 @@
         }
       }
     },
-
+    {
+        "name": "scheduler",
+        "type": "Microsoft.Resources/deployments",
+        "apiVersion": "2016-09-01",
+        "dependsOn": [
+            "[concat('Microsoft.Compute/virtualMachines/', variables('masterBoxName'),'/extensions/ext')]"
+        ],
+        "properties": {
+          "mode": "Incremental",
+          "templateLink": {
+            "uri": "https://raw.githubusercontent.com/grandparoach/azure-hpc/master/Compute-Grid-Infra/PBSPro/pbspro.json",
+            "contentVersion": "1.0.0.0"
+          },
+          "parameters": {
+            "vmName": { "value": "[variables('masterBoxName')]" },
+            "masterName": { "value": "[variables('masterBoxName')]" }
+          }
+        }
+      },
 
     {
       "apiVersion": "2015-06-15",
@@ -572,11 +592,3 @@
     }
   ]
 }
-
-
-
-
-
-
-
-
