@@ -573,7 +573,8 @@
       "location": "[resourceGroup().location]",
       "dependsOn": [
         "[concat('Microsoft.Compute/virtualMachines/', concat(parameters('vmPrefix'), '-cn', padLeft(copyindex(1), 2, '0')))]",
-        "[concat('Microsoft.Compute/virtualMachines/', variables('masterBoxName'),'/extensions/ext')]"
+        "[concat('Microsoft.Compute/virtualMachines/', variables('masterBoxName'),'/extensions/ext')]",
+        "scheduler"
       ],
       "copy": {
         "name": "computeNodeExtensionsCopy",
