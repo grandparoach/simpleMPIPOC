@@ -151,6 +151,27 @@
       "metadata": {
         "description": "The number of disks to attach to the NFS server."
       }
+    },
+    "existingVNetName": {
+        "type": "string",
+        "defaultValue": "ARMHPCVNet",
+        "metadata": {
+          "description": "name of existing Virtual Network"
+      }
+    },
+    "existingVNetResourceGroup": {
+      "type": "string",
+      "defaultValue": "ARMHPC",
+      "metadata": {
+        "description": "name of Resource Group for existing Virtual Network"
+      }
+    },
+    "existingSubnetName": {
+      "type": "string",
+      "defaultValue": "Subnet-2",
+      "metadata": {
+        "description": "name of existing Virtual Network"
+      }
     }
   },
   "variables": {
@@ -158,15 +179,8 @@
     "namingInfix": "[toLower(substring(concat(parameters('vmPrefix'), uniqueString(resourceGroup().id)), 0, 9))]",
     "longNamingInfix": "[toLower(parameters('vmPrefix'))]",
     "newStorageAccountSuffix": "[concat(variables('longNamingInfix'), 'sa')]",
-    "virtualNetworkName": "grid-vnet",
-    "vnetID": "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]",
-    "addressPrefix": "172.0.0.0/20",
-    "computeSubnetPrefix": "172.0.0.0/21",
-    "storageSubnetPrefix": "172.0.10.0/25",
-    "infraSubnetPrefix": "172.0.8.0/28",
-    "gatewaySubnetPrefix": "172.0.9.0/29",
-    "infraSubnetRef": "[concat(variables('vnetID'),'/subnets/infraSubnet/')]",
-    "nsgName": "nsg-master",
+    "vnetID": "[resourceId(parameters('existingVNetResourceGroup'), 'Microsoft.Network/virtualNetworks', parameters('existingVNetName'))]",
+    "SubnetRef": "[concat(variables('vnetID'),'/subnets/', parameters('existingSubnetName'))]",
     "masterBoxName": "[concat(variables('longNamingInfix'), 'master')]",
     "DiagSAName": "[concat(uniqueString(concat(resourceGroup().id, variables('newStorageAccountSuffix'), 'masterboxsadiag')), 'diag')]",
     "MasterIPConfigName": "[concat(variables('masterBoxName'), 'ipconfig')]",
@@ -332,45 +346,6 @@
 
   "resources": [
     {
-      "type": "Microsoft.Network/virtualNetworks",
-      "name": "[variables('virtualNetworkName')]",
-      "location": "[resourceGroup().location]",
-      "apiVersion": "2016-03-30",
-      "properties": {
-        "addressSpace": {
-          "addressPrefixes": [
-            "[variables('addressPrefix')]"
-          ]
-        },
-        "subnets": [
-          {
-            "name": "computeSubnet",
-            "properties": {
-              "addressPrefix": "[variables('computeSubnetPrefix')]"
-            }
-          },
-          {
-            "name": "storageSubnet",
-            "properties": {
-              "addressPrefix": "[variables('storageSubnetPrefix')]"
-            }
-          },
-          {
-            "name": "infraSubnet",
-            "properties": {
-              "addressPrefix": "[variables('infraSubnetPrefix')]"
-            }
-          },
-          {
-            "name": "GatewaySubnet",
-            "properties": {
-              "addressPrefix": "[variables('gatewaySubnetPrefix')]"
-            }
-          }
-        ]
-      }
-    },
-    {
       "type": "Microsoft.Storage/storageAccounts",
       "name": "[variables('DiagSAName')]",
       "location": "[variables('location')]",
@@ -394,8 +369,7 @@
       "location": "[variables('location')]",
       "apiVersion": "2016-03-30",
       "dependsOn": [
-        "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]",
-        "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]"
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]"
       ],
       "properties": {
         "ipConfigurations": [
@@ -407,7 +381,7 @@
                 "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]"
               }, 
               "subnet": {
-                "id": "[variables('infraSubnetRef')]"
+                "id": "[variables('SubnetRef')]"
               }
             }
           }
@@ -496,7 +470,6 @@
         "capacity": "[parameters('computeNodeCount')]"
       },
       "dependsOn": [
-        "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]",
         "[concat('Microsoft.Compute/virtualMachines/', variables('masterBoxName'),'/extensions/ext')]"
       ],
       "properties": {
@@ -516,7 +489,7 @@
                       "name": "[variables('NodeipConfigName')]",
                       "properties": {
                         "subnet": {
-                            "id": "[variables('infraSubnetRef')]"
+                            "id": "[variables('SubnetRef')]"
                         }
                       }
                     }
@@ -563,6 +536,11 @@
     }
   ]
 }
+
+
+
+
+
 
 
 
