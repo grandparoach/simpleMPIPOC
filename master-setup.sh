@@ -56,12 +56,15 @@ EOF
         createdPartitions="$createdPartitions /dev/${disk}1"
     done
     
-    sleep 10
+    sleep 30
 
 # Create RAID-0 volume
     if [ -n "$createdPartitions" ]; then
         devices=`echo $createdPartitions | wc -w`
         mdadm --create /dev/md10 --level 0 --raid-devices $devices $createdPartitions
+	
+	sleep 30 
+	
         mkfs -t ext4 /dev/md10
         echo "/dev/md10 $mountPoint ext4 defaults,nofail 0 2" >> /etc/fstab
         mount /dev/md10
