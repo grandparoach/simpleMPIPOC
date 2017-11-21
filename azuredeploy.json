@@ -183,10 +183,7 @@
     "SubnetRef": "[concat(variables('vnetID'),'/subnets/', parameters('existingSubnetName'))]",
     "masterBoxName": "[concat(variables('longNamingInfix'), 'master')]",
     "DiagSAName": "[concat(uniqueString(concat(resourceGroup().id, variables('newStorageAccountSuffix'), 'masterboxsadiag')), 'diag')]",
-    "MasterIPConfigName": "[concat(variables('masterBoxName'), 'ipconfig')]",
     "MasterNicName": "[concat(variables('masterBoxName'), 'nic')]",
-    "publicIPAddressName": "[concat(variables('masterBoxName'), 'pip')]",
-    "publicIPDomainName": "[variables('namingInfix')]",
     "osType": "linux",
     "MasterimageReference": "[variables('computeImages')[parameters('masterImage')]]",
     "sshKeyPath": "[concat('/home/',parameters('adminUserName'),'/.ssh/authorized_keys')]",
@@ -331,14 +328,14 @@
     
     "mastervmScripts": {
       "scriptsToDownload": [
-        "https://raw.githubusercontent.com/grandparoach/simpleMPIPOC/honda/master-setup.sh"
+        "https://raw.githubusercontent.com/grandparoach/simpleMPIPOC/utc/master-setup.sh"
       ],
       "commandToExecute": "bash master-setup.sh"
     },
     
     "vmScripts": {
       "scriptsToDownload": [
-        "https://raw.githubusercontent.com/grandparoach/simpleMPIPOC/honda/cn-setup.sh"
+        "https://raw.githubusercontent.com/grandparoach/simpleMPIPOC/utc/cn-setup.sh"
       ],
       "commandToExecute": "[concat('bash cn-setup.sh ', variables('masterBoxName'))]"
     }
@@ -355,21 +352,11 @@
       }
     },
     {
-      "type": "Microsoft.Network/publicIPAddresses",
-      "name": "[variables('publicIPAddressName')]",
-      "location": "[variables('location')]",
-      "apiVersion": "2016-03-30",
-      "properties": {
-        "publicIPAllocationMethod": "Dynamic"
-      }
-    },
-    {
       "type": "Microsoft.Network/networkInterfaces",
       "name": "[variables('MasterNicName')]",
       "location": "[variables('location')]",
       "apiVersion": "2016-03-30",
       "dependsOn": [
-        "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]"
       ],
       "properties": {
         "ipConfigurations": [
@@ -377,9 +364,6 @@
             "name": "[variables('MasterIPConfigName')]",
             "properties": {
               "privateIPAllocationMethod": "Dynamic",
-              "publicIPAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]"
-              }, 
               "subnet": {
                 "id": "[variables('SubnetRef')]"
               }
