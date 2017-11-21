@@ -183,6 +183,7 @@
     "SubnetRef": "[concat(variables('vnetID'),'/subnets/', parameters('existingSubnetName'))]",
     "masterBoxName": "[concat(variables('longNamingInfix'), 'master')]",
     "DiagSAName": "[concat(uniqueString(concat(resourceGroup().id, variables('newStorageAccountSuffix'), 'masterboxsadiag')), 'diag')]",
+    "MasterIPConfigName": "[concat(variables('masterBoxName'), 'ipconfig')]",
     "MasterNicName": "[concat(variables('masterBoxName'), 'nic')]",
     "osType": "linux",
     "MasterimageReference": "[variables('computeImages')[parameters('masterImage')]]",
