@@ -92,7 +92,7 @@
       "defaultValue": "CentOS-HPC_7.4",
       "allowedValues": [
         "CentOS_6.7",
-        "CentOS_7.2",
+        "CentOS_7.4",
         "CentOS-HPC_7.1",
         "CentOS-HPC_7.3",
         "CentOS-HPC_7.4",
@@ -340,14 +340,14 @@
     
     "mastervmScripts": {
       "scriptsToDownload": [
-        "https://raw.githubusercontent.com/grandparoach/simpleMPIPOC/NOAA/master-setup.sh"
+        "https://raw.githubusercontent.com/grandparoach/simpleMPIPOC/gov/master-setup.sh"
       ],
       "commandToExecute": "bash master-setup.sh"
     },
     
     "vmScripts": {
       "scriptsToDownload": [
-        "https://raw.githubusercontent.com/grandparoach/simpleMPIPOC/NOAA/cn-setup.sh"
+        "https://raw.githubusercontent.com/grandparoach/simpleMPIPOC/gov/cn-setup.sh"
       ],
       "commandToExecute": "[concat('bash cn-setup.sh ', variables('masterBoxName'))]"
     }
@@ -478,7 +478,7 @@
         "diagnosticsProfile": {
           "bootDiagnostics": {
             "enabled": "true",
-           "storageUri": "[concat('http://',variables('DiagSAName'),'.blob.core.windows.net')]"
+           "storageUri": "[concat('http://',variables('DiagSAName'),'.blob.core.usgovcloudapi.net')]"
           }
         }
       }
