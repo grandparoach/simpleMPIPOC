@@ -30,7 +30,7 @@
     },
     "masterImage": {
       "type": "string",
-      "defaultValue": "CentOS_7.4",
+      "defaultValue": "SLES-HPC-Priority",
       "allowedValues": [
         "CentOS_6.7",
         "CentOS_7.2",
@@ -90,7 +90,7 @@
     },
     "computeNodeImage": {
       "type": "string",
-      "defaultValue": "CentOS-HPC_7.4",
+      "defaultValue": "SLES-HPC-Priority",
       "allowedValues": [
         "CentOS_6.7",
         "CentOS_7.2",
@@ -160,6 +160,7 @@
     }
   },
   "variables": {
+    "baseUrl": "https://raw.githubusercontent.com/grandparoach/simpleMPIPOC/SLES/",
     "location": "[resourceGroup().location]",
     "namingInfix": "[toLower(substring(concat(parameters('vmPrefix'), uniqueString(resourceGroup().id)), 0, 9))]",
     "longNamingInfix": "[toLower(parameters('vmPrefix'))]",
@@ -348,16 +349,16 @@
     
     "mastervmScripts": {
       "scriptsToDownload": [
-        "https://raw.githubusercontent.com/grandparoach/simpleMPIPOC/NOAA/master-setup.sh"
+        "https://raw.githubusercontent.com/grandparoach/simpleMPIPOC/SLES/master-setup.sh"
       ],
-      "commandToExecute": "bash master-setup.sh"
+      "commandToExecute": "[concat('bash master-setup.sh ', variables('masterBoxName'), variables('baseUrl'))]"
     },
     
     "vmScripts": {
       "scriptsToDownload": [
-        "https://raw.githubusercontent.com/grandparoach/simpleMPIPOC/NOAA/cn-setup.sh"
+        "https://raw.githubusercontent.com/grandparoach/simpleMPIPOC/SLES/cn-setup.sh"
       ],
-      "commandToExecute": "[concat('bash cn-setup.sh ', variables('masterBoxName'))]"
+      "commandToExecute": "[concat('bash cn-setup.sh ', variables('masterBoxName'), variables('baseUrl'))]"
     }
   },  
 
