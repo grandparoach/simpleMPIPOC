@@ -160,7 +160,7 @@
     }
   },
   "variables": {
-    "baseUrl": "https://raw.githubusercontent.com/grandparoach/simpleMPIPOC/SLES/",
+    "baseUrl": "https://raw.githubusercontent.com/grandparoach/simpleMPIPOC/SLES",
     "location": "[resourceGroup().location]",
     "namingInfix": "[toLower(substring(concat(parameters('vmPrefix'), uniqueString(resourceGroup().id)), 0, 9))]",
     "longNamingInfix": "[toLower(parameters('vmPrefix'))]",
