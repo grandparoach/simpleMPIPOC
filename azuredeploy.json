@@ -36,6 +36,7 @@
         "CentOS_7.2",
         "CentOS_7.3",
         "CentOS_7.4",
+        "SLES-HPC-Priority",
         "RHEL_7.2"
       ],
       "metadata": {
@@ -96,6 +97,7 @@
         "CentOS-HPC_7.1",
         "CentOS-HPC_7.3",
         "CentOS-HPC_7.4",
+        "SLES-HPC-Priority",
         "RHEL_7.2"
       ],
       "metadata": {
@@ -222,6 +224,12 @@
         "publisher": "OpenLogic",
         "offer": "CentOS-HPC",
         "sku": "7.1",
+        "version": "latest"
+      },
+      "SLES-HPC-Priority": {
+        "publisher": "SUSE",
+        "offer": "SLES-HPC-Priority",
+        "sku": "12-SP3",
         "version": "latest"
       },
       "RHEL_7.2": {
@@ -586,6 +594,7 @@
     }
   ]
 }
+
 
 
 
