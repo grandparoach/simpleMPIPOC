@@ -351,14 +351,14 @@
       "scriptsToDownload": [
         "https://raw.githubusercontent.com/grandparoach/simpleMPIPOC/SLES/master-setup.sh"
       ],
-      "commandToExecute": "[concat('bash master-setup.sh ', variables('masterBoxName'), variables('baseUrl'))]"
+      "commandToExecute": "[concat('bash master-setup.sh ', variables('masterBoxName'), ' ', variables('baseUrl'))]"
     },
     
     "vmScripts": {
       "scriptsToDownload": [
         "https://raw.githubusercontent.com/grandparoach/simpleMPIPOC/SLES/cn-setup.sh"
       ],
-      "commandToExecute": "[concat('bash cn-setup.sh ', variables('masterBoxName'), variables('baseUrl'))]"
+      "commandToExecute": "[concat('bash cn-setup.sh ', variables('masterBoxName'), ' ', variables('baseUrl'))]"
     }
   },  
 
