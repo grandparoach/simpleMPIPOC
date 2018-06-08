@@ -59,7 +59,8 @@ add_sdk_repo()
 #
 install_pkgs()
 {
-    pkgs="libbz2-1 libz1 openssl libopenssl-devel gcc gcc-c++ nfs-client rpcbind"
+#    pkgs="libbz2-1 libz1 openssl libopenssl-devel gcc gcc-c++ nfs-client rpcbind"
+    pkgs="openssl libopenssl-devel nfs-client rpcbind"
 
     if is_master; then
         pkgs="$pkgs nfs-kernel-server mdadm"
