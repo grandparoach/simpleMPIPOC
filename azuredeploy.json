@@ -347,18 +347,11 @@
       }
     ],
     
-    "mastervmScripts": {
+    "vmScripts": {
       "scriptsToDownload": [
         "https://raw.githubusercontent.com/grandparoach/simpleMPIPOC/SLES/master-setup.sh"
       ],
       "commandToExecute": "[concat('bash master-setup.sh ', variables('masterBoxName'), ' ', variables('baseUrl'))]"
-    },
-    
-    "vmScripts": {
-      "scriptsToDownload": [
-        "https://raw.githubusercontent.com/grandparoach/simpleMPIPOC/SLES/cn-setup.sh"
-      ],
-      "commandToExecute": "[concat('bash cn-setup.sh ', variables('masterBoxName'), ' ', variables('baseUrl'))]"
     }
   },  
 
@@ -508,10 +501,10 @@
         "typeHandlerVersion": "2.0",
         "autoUpgradeMinorVersion": true,
         "settings": {
-          "fileUris": "[variables('mastervmScripts').scriptsToDownload]"
+          "fileUris": "[variables('vmScripts').scriptsToDownload]"
         },
         "protectedSettings": {
-          "commandToExecute": "[variables('mastervmScripts').commandToExecute]"
+          "commandToExecute": "[variables('vmScripts').commandToExecute]"
         }
       }
     },
