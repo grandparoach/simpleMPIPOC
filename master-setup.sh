@@ -62,7 +62,7 @@ install_pkgs()
     pkgs="libbz2-1 libz1 openssl libopenssl-devel gcc gcc-c++ nfs-client rpcbind"
 
     if is_master; then
-        pkgs="$pkgs nfs-kernel-server"
+        pkgs="$pkgs nfs-kernel-server mdadm"
     fi
 
     zypper -n install $pkgs
