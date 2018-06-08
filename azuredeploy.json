@@ -152,7 +152,7 @@
     },
     "nbDataDisks": {
       "type": "int",
-      "defaultValue": 8,
+      "defaultValue": 16,
       "maxValue": 16,
       "metadata": {
         "description": "The number of disks to attach to the NFS server."
