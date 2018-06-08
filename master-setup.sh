@@ -171,6 +171,8 @@ setup_env()
 	echo "$HPC_USER soft memlock unlimited" >> /etc/security/limits.conf
 
 	# Intel MPI config for IB
+	rpm -v -i --nodeps /opt/intelMPI/intel_mpi_packages/*.rpm
+	
     echo "# IB Config for MPI" > /etc/profile.d/hpc.sh
 	echo "export I_MPI_FABRICS=shm:dapl" >> /etc/profile.d/hpc.sh
 	echo "export I_MPI_DAPL_PROVIDER=ofa-v2-ib0" >> /etc/profile.d/hpc.sh
