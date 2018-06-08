@@ -120,11 +120,11 @@ setup_shares()
         echo "$SHARE_DATA    *(rw,async)" >> /etc/exports
         service nfsserver status && service nfsserver reload || service nfsserver start
     else
-        echo "master:$SHARE_HOME $SHARE_HOME    nfs4    rw,auto,_netdev 0 0" >> /etc/fstab
-        echo "master:$SHARE_DATA $SHARE_DATA    nfs4    rw,auto,_netdev 0 0" >> /etc/fstab
+        echo "$MASTER_HOSTNAME:$SHARE_HOME $SHARE_HOME    nfs4    rw,auto,_netdev 0 0" >> /etc/fstab
+        echo "$MASTER_HOSTNAME:$SHARE_DATA $SHARE_DATA    nfs4    rw,auto,_netdev 0 0" >> /etc/fstab
         mount -a
-        mount | grep "^master:$SHARE_HOME"
-        mount | grep "^master:$SHARE_DATA"
+        mount | grep "$MASTER_HOSTNAME:$SHARE_HOME"
+        mount | grep "$MASTER_HOSTNAME:$SHARE_DATA"
     fi
 }
 
