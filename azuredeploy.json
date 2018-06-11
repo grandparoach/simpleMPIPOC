@@ -380,7 +380,6 @@
         "capacity": "[parameters('computeNodeCount')]"
       },
       "dependsOn": [
-        "[concat('Microsoft.Compute/virtualMachines/', variables('masterBoxName'),'/extensions/ext')]"
       ],
       "properties": {
         "overprovision": "false",
