@@ -225,90 +225,7 @@
     "vmssnamingInfix": "[toLower(take(concat(parameters('vmPrefix'), uniqueString(resourceGroup().id)), 9))]",
     "NodenicName": "[concat(variables('vmssnamingInfix'), 'nic')]",
     "NodeipConfigName": "[concat(variables('vmssnamingInfix'), 'ipconfig')]",
-    
-    "dataDiskArray": [
-      {
-        "diskSizeGB": "[parameters('datadiskSize')]",
-        "lun": "0",
-        "createOption": "Empty"
-      },
-      {
-        "diskSizeGB": "[parameters('datadiskSize')]",
-        "lun": "1",
-        "createOption": "Empty"
-      },
-      {
-        "diskSizeGB": "[parameters('datadiskSize')]",
-        "lun": "2",
-        "createOption": "Empty"
-      },
-      {
-        "diskSizeGB": "[parameters('datadiskSize')]",
-        "lun": "3",
-        "createOption": "Empty"
-      },
-      {
-        "diskSizeGB": "[parameters('datadiskSize')]",
-        "lun": "4",
-        "createOption": "Empty"
-      },
-      {
-        "diskSizeGB": "[parameters('datadiskSize')]",
-        "lun": "5",
-        "createOption": "Empty"
-      },
-      {
-        "diskSizeGB": "[parameters('datadiskSize')]",
-        "lun": "6",
-        "createOption": "Empty"
-      },
-      {
-        "diskSizeGB": "[parameters('datadiskSize')]",
-        "lun": "7",
-        "createOption": "Empty"
-      },
-      {
-        "diskSizeGB": "[parameters('datadiskSize')]",
-        "lun": "8",
-        "createOption": "Empty"
-      },
-      {
-        "diskSizeGB": "[parameters('datadiskSize')]",
-        "lun": "9",
-        "createOption": "Empty"
-      },
-      {
-        "diskSizeGB": "[parameters('datadiskSize')]",
-        "lun": "10",
-        "createOption": "Empty"
-      },
-      {
-        "diskSizeGB": "[parameters('datadiskSize')]",
-        "lun": "11",
-        "createOption": "Empty"
-      },
-      {
-        "diskSizeGB": "[parameters('datadiskSize')]",
-        "lun": "12",
-        "createOption": "Empty"
-      },
-      {
-        "diskSizeGB": "[parameters('datadiskSize')]",
-        "lun": "13",
-        "createOption": "Empty"
-      },
-      {
-        "diskSizeGB": "[parameters('datadiskSize')]",
-        "lun": "14",
-        "createOption": "Empty"
-      },
-      {
-        "diskSizeGB": "[parameters('datadiskSize')]",
-        "lun": "15",
-        "createOption": "Empty"
-      }
-    ],
-    
+        
     "mastervmScripts": {
       "scriptsToDownload": [
         "https://raw.githubusercontent.com/grandparoach/simpleMPIPOC/NOAA/master-setup.sh"
@@ -437,7 +354,20 @@
                 "storageAccountType": "Premium_LRS"
              }
           },
-          "dataDisks": "[take(variables('dataDiskArray'),parameters('nbDataDisks'))]"
+          
+
+          "copy": [{
+            "name": "dataDisks",
+            "count": "[parameters('nbDataDisks')]",
+            "input": {
+                "lun": "[copyIndex('dataDisks')]",
+                "createOption": "Empty",
+                "caching": "ReadOnly",
+                "diskSizeGB": "[parameters('datadiskSize')]"
+            }
+        }]
+
+
         },
         "networkProfile": {
           "networkInterfaces": [
@@ -483,7 +413,7 @@
       "type": "Microsoft.Compute/virtualMachineScaleSets",
       "name": "[parameters('vmPrefix')]",
       "location": "[variables('location')]",
-      "apiVersion": "2016-04-30-preview",
+      "apiVersion": "2017-12-01",
       "sku": {
         "name": "[parameters('CompNodeVMsku')]",
         "tier": "Standard",
