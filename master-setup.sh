@@ -153,7 +153,7 @@ setup_user()
 	chmod 600 $SHARE_HOME/$HPC_USER/.ssh/id_rsa
 	chmod 644 $SHARE_HOME/$HPC_USER/.ssh/id_rsa.pub
 	
-	# chown -R $HPC_USER:$HPC_GROUP $NFS_DATA
+	chown -R $HPC_USER:$HPC_GROUP $NFS_DATA
 }
 
 
