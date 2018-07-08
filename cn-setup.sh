@@ -75,6 +75,6 @@ install_cuda_drivers()
 
 mount_nfs
 setup_user
-install_cuda_drivers
+#install_cuda_drivers
 
-reboot
+#reboot
