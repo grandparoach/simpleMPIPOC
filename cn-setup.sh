@@ -1,5 +1,5 @@
 #!/bin/bash
-
+set -x
 MASTER_NAME=$1
 echo $MASTER_NAME
 
@@ -52,8 +52,7 @@ setup_user()
     sed -i 's/^Defaults[ ]*requiretty/# Defaults requiretty/g' /etc/sudoers
 
 	useradd -c "HPC User" -g $HPC_GROUP -d $SHARE_HOME/$HPC_USER -s /bin/bash -u $HPC_UID $HPC_USER
-
-    chown $HPC_USER:$HPC_GROUP $SHARE_DATA	
+	
 }
 
 install_cuda_drivers()
