@@ -479,6 +479,17 @@
                     "commandToExecute": "[variables('vmScripts').commandToExecute]"
                   }
                 }
+              },
+              {
+                "name": "CudaDriversExtension",
+                "apiVersion": "2015-06-15",
+                "properties": {
+                  "publisher": "Microsoft.HpcCompute",
+                  "type": "NvidiaGpuDriverLinux",
+                  "typeHandlerVersion": "1.0",
+                  "settings": {
+                  }
+                }
               }
             ]
           }
@@ -487,7 +498,6 @@
     }
   ]
 }
-
 
 
 
