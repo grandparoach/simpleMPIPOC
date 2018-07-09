@@ -482,7 +482,6 @@
               },
               {
                 "name": "CudaDriversExtension",
-                "apiVersion": "2015-06-15",
                 "properties": {
                   "publisher": "Microsoft.HpcCompute",
                   "type": "NvidiaGpuDriverLinux",
