@@ -50,14 +50,14 @@
         "Standard_NC12",
         "Standard_NC24",
         "Standard_NC24r",
-        "Standard_NC6_v2",
-        "Standard_NC12_v2",
-        "Standard_NC24_v2",
-        "Standard_NC24r_v2",
-        "Standard_NC6_v3",
-        "Standard_NC12_v3",
-        "Standard_NC24_v3",
-        "Standard_NC24r_v3",
+        "Standard_NC6s_v2",
+        "Standard_NC12s_v2",
+        "Standard_NC24s_v2",
+        "Standard_NC24rs_v2",
+        "Standard_NC6s_v3",
+        "Standard_NC12s_v3",
+        "Standard_NC24s_v3",
+        "Standard_NC24rs_v3"
       ],
       "metadata": {
         "description": "Instance type to use for the compute nodes"
@@ -238,6 +238,11 @@
         "https://raw.githubusercontent.com/grandparoach/simpleMPIPOC/NC24R/cn-setup.sh"
       ],
       "commandToExecute": "[concat('bash cn-setup.sh ', variables('masterBoxName'))]"
+    },
+    "AvailabilitySetSettings": {
+        "name": "ComputeNodeAvailabilitySet",
+        "faultDomainCount": "3",
+        "updateDomainCount": "5"
     }
   },  
 
@@ -408,97 +413,129 @@
       }
     },
 
+    
+    {
+        "apiVersion": "2016-04-30-preview",
+        "type": "Microsoft.Compute/availabilitySets",
+           "sku": {
+              "name": "Aligned"
+           },
+        "name": "[variables('AvailabilitySetSettings').name]",
+        "location": "[resourceGroup().location]",
+        "properties": {
+          "platformFaultDomainCount": "[variables('AvailabilitySetSettings').faultDomainCount]",
+          "platformUpdateDomainCount": "[variables('AvailabilitySetSettings').updateDomainCount]"
+        }
+      },  
 
     {
-      "type": "Microsoft.Compute/virtualMachineScaleSets",
-      "name": "[parameters('vmPrefix')]",
-      "location": "[variables('location')]",
-      "apiVersion": "2017-12-01",
-      "sku": {
-        "name": "[parameters('CompNodeVMsku')]",
-        "tier": "Standard",
-        "capacity": "[parameters('computeNodeCount')]"
-      },
-      "dependsOn": [
-        "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]",
-        "[concat('Microsoft.Compute/virtualMachines/', variables('masterBoxName'),'/extensions/ext')]"
-      ],
-      "properties": {
-        "overprovision": "false",
-        "upgradePolicy": {
-          "mode": "Manual"
+       "type": "Microsoft.Network/networkInterfaces",
+        "name": "[concat(parameters('vmPrefix'), '-nic', copyIndex(1))]",
+        "location": "[variables('location')]",
+        "apiVersion": "2016-03-30",
+        "dependsOn": [
+          "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]"
+        ],
+        "copy": {
+            "name": "clientNicCopy",
+            "count": "[parameters('computeNodeCount')]"
         },
-        "virtualMachineProfile": {
-          "networkProfile": {
-            "networkInterfaceConfigurations": [
-              {
-                "name": "[variables('NodenicName')]",
-                "properties": {
-                  "primary": "true",
-                  "ipConfigurations": [
-                    {
-                      "name": "[variables('NodeipConfigName')]",
-                      "properties": {
-                        "subnet": {
-                            "id": "[variables('computeSubnetRef')]"
-                        }
-                      }
-                    }
-                  ]
+        "properties": {
+          "ipConfigurations": [
+            {
+              "name": "clusterIP",
+              "properties": {
+                "privateIPAllocationMethod": "Dynamic",
+                "subnet": {
+                  "id": "[variables('computeSubnetRef')]"
                 }
               }
-            ]
+            }
+          ]
+        }
+      },
+
+      {
+        "type": "Microsoft.Compute/virtualMachines",
+        "name": "[concat(parameters('vmPrefix'), '-cn', copyIndex(1))]",
+        "location": "[variables('location')]",
+        "apiVersion": "2016-04-30-preview",
+        "dependsOn": [
+          "[concat('Microsoft.Network/networkinterfaces/', parameters('vmPrefix'), '-nic', copyIndex(1))]",
+          "[concat('Microsoft.Storage/storageAccounts/', variables('DiagSAName'))]",
+          "[variables('AvailabilitySetSettings').name]"
+        ],
+        "copy": {
+            "name": "clientVmCopy",
+            "count": "[parameters('computeNodeCount')]"
+        },
+        "properties": {
+          "availabilitySet": {
+            "id": "[resourceId('Microsoft.Compute/availabilitySets', variables('AvailabilitySetSettings').name)]"
+          },  
+          "hardwareProfile": {
+            "vmSize": "[parameters('CompNodeVMsku')]"
           },
           "osProfile": {
-            "computerNamePrefix": "[variables('vmssnamingInfix')]",
+            "computerName": "[concat(parameters('vmPrefix'), '-cn', copyIndex(1))]",
             "adminUsername": "[parameters('adminUserName')]",
             "adminPassword": "[parameters('adminPassword')]",
             "linuxConfiguration": "[variables('linuxConfiguration')]"
           },
           "storageProfile": {
-            "imageReference": "[variables('NodeimageReference')]",  
+            "imageReference": "[variables('NodeimageReference')]",
             "osDisk": {
               "caching": "ReadOnly",
               "createOption": "FromImage",
-              "managedDisk": {
-                "storageAccountType": "Standard_LRS"
-             }
+               "managedDisk": {
+                  "storageAccountType": "Standard_LRS"
+               }
             }
           },
-          "extensionProfile": {
-            "extensions": [
+          "networkProfile": {
+            "networkInterfaces": [
               {
-                "name": "installCN",
-                "properties": {
-                  "publisher": "Microsoft.Azure.Extensions",
-                  "type": "CustomScript",
-                  "typeHandlerVersion": "2.0",
-                  "autoUpgradeMinorVersion": true,
-                  "settings": {
-                    "fileUris": "[variables('vmScripts').scriptsToDownload]",
-                    "commandToExecute": "[variables('vmScripts').commandToExecute]"
-                  }
-                }
-              },
-              {
-                "name": "CudaDriversExtension",
-                "properties": {
-                  "publisher": "Microsoft.HpcCompute",
-                  "type": "NvidiaGpuDriverLinux",
-                  "typeHandlerVersion": "1.0",
-                  "settings": {
-                  }
-                }
+                "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(parameters('vmPrefix'), '-nic', copyIndex(1)))]" 
               }
             ]
+          },
+          "diagnosticsProfile": {
+            "bootDiagnostics": {
+              "enabled": "true",
+             "storageUri": "[concat('http://',variables('DiagSAName'),'.blob.core.windows.net')]"
+            }
           }
         }
-      }
+      },
+
+      {
+        "type": "Microsoft.Compute/virtualMachines/extensions",
+        "name": "[concat(parameters('vmPrefix'), '-cn', copyIndex(1), '/ext')]",
+        "apiVersion": "2015-06-15",
+        "location": "[resourceGroup().location]",
+        "dependsOn": [
+          "[concat('Microsoft.Compute/virtualMachines/', concat(parameters('vmPrefix'), '-cn', copyIndex(1)))]",
+          "[concat('Microsoft.Compute/virtualMachines/', variables('masterBoxName'),'/extensions/ext')]"
+        ],
+        "copy": {
+            "name": "computeNodeExtensionsCopy",
+            "count": "[parameters('computeNodeCount')]"
+        },
+        "properties": {
+          "publisher": "Microsoft.Azure.Extensions",
+          "type": "CustomScript",
+          "typeHandlerVersion": "2.0",
+          "autoUpgradeMinorVersion": true,
+          "settings": {
+            "fileUris": "[variables('vmScripts').scriptsToDownload]"
+          },
+          "protectedSettings": {
+            "commandToExecute": "[variables('vmScripts').commandToExecute]"
+          }
+        }
     }
   ]
 }
-
-
 
 
 
