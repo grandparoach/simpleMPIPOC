@@ -241,7 +241,7 @@
     },
     "AvailabilitySetSettings": {
         "name": "ComputeNodeAvailabilitySet",
-        "faultDomainCount": "3",
+        "faultDomainCount": "2",
         "updateDomainCount": "5"
     }
   },  
