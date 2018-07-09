@@ -1,5 +1,5 @@
 #!/bin/bash
-set -x
+set +x
 MASTER_NAME=$1
 echo $MASTER_NAME
 
@@ -21,7 +21,13 @@ HPC_UID=7007
 HPC_GROUP=hpc
 HPC_GID=7007
 
-yum -y install redhat-lsb
+
+install_pkgs()
+{
+    yum -y install epel-release
+    yum -y install zlib zlib-devel bzip2 bzip2-devel bzip2-libs openssl openssl-devel openssl-libs gcc gcc-c++ nfs-utils rpcbind mdadm wget python-pip openmpi openmpi-devel automake autoconf pdsh 
+    yum -y install redhat-lsb
+}
 
 mount_nfs()
 {
@@ -53,7 +59,8 @@ setup_user()
     sed -i 's/^Defaults[ ]*requiretty/# Defaults requiretty/g' /etc/sudoers
 
 	useradd -c "HPC User" -g $HPC_GROUP -d $SHARE_HOME/$HPC_USER -s /bin/bash -u $HPC_UID $HPC_USER
-	
+
+
 }
 
 install_cuda_drivers()
@@ -69,11 +76,11 @@ install_cuda_drivers()
     
     yum -y install cuda-drivers
     
-    #yum -y install cuda
+    yum -y install cuda
 	
 }
 
-
+install_pkgs
 mount_nfs
 setup_user
 install_cuda_drivers
