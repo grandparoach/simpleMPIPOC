@@ -533,10 +533,30 @@
             "commandToExecute": "[variables('vmScripts').commandToExecute]"
           }
         }
+    },
+    {
+        "type": "Microsoft.Compute/virtualMachines/extensions",
+        "name": "[concat(parameters('vmPrefix'), '-cn', copyIndex(1), '/cudadrivers')]",
+        "apiVersion": "2015-06-15",
+        "location": "[resourceGroup().location]",
+        "dependsOn": [
+          "[concat('Microsoft.Compute/virtualMachines/', concat(parameters('vmPrefix'), '-cn', copyIndex(1)))]",
+          "[concat('Microsoft.Compute/virtualMachines/', concat(parameters('vmPrefix'), '-cn', copyIndex(1)),'/extensions/ext')]"
+        ],
+        "copy": {
+            "name": "cudadriversExtensionsCopy",
+            "count": "[parameters('computeNodeCount')]"
+        },
+        "properties": {
+          "publisher": "Microsoft.HpcCompute",
+          "type": "NvidiaGpuDriverLinux",
+          "typeHandlerVersion": "1.0",
+          "settings": {
+          } 
+        }
     }
   ]
 }
-
 
 
 
