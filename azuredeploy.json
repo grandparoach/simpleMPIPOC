@@ -192,7 +192,7 @@
       "CentOS-HPC_7.4": {
         "publisher": "OpenLogic",
         "offer": "CentOS-HPC",
-        "sku": "7.1",
+        "sku": "7.4",
         "version": "latest"
       },
       "RHEL_7.2": {
