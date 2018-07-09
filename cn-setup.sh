@@ -21,6 +21,7 @@ HPC_UID=7007
 HPC_GROUP=hpc
 HPC_GID=7007
 
+yum -y install redhat-lsb
 
 mount_nfs()
 {
@@ -68,13 +69,13 @@ install_cuda_drivers()
     
     yum -y install cuda-drivers
     
-    yum -y install cuda
+    #yum -y install cuda
 	
 }
 
 
 mount_nfs
 setup_user
-#install_cuda_drivers
+install_cuda_drivers
 
-#reboot
+reboot
