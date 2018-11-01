@@ -60,4 +60,86 @@ setup_user()
 mount_nfs
 setup_user
 
-exit 0
+
+GLUSTERHOSTPREFIX=glusterhost
+GLUSTERHOSTCOUNT=8
+GLUSTERVOLUME=gfsvol
+
+MOUNTPOINT=/mnt/${GLUSTERVOLUME}
+mkdir -p ${MOUNTPOINT}
+
+#Install Gluster Fuse Client
+
+yum -y install psmisc
+
+wget --no-cache https://buildlogs.centos.org/centos/7/storage/x86_64/gluster-4.1/glusterfs-libs-4.1.1-1.el7.x86_64.rpm
+rpm -i glusterfs-libs-4.1.1-1.el7.x86_64.rpm
+wget --no-cache https://buildlogs.centos.org/centos/7/storage/x86_64/gluster-4.1/glusterfs-4.1.1-1.el7.x86_64.rpm
+rpm -i glusterfs-4.1.1-1.el7.x86_64.rpm
+wget https://buildlogs.centos.org/centos/7/storage/x86_64/gluster-4.1/glusterfs-client-xlators-4.1.1-1.el7.x86_64.rpm
+rpm -i glusterfs-client-xlators-4.1.1-1.el7.x86_64.rpm
+wget https://buildlogs.centos.org/centos/7/storage/x86_64/gluster-4.1/glusterfs-fuse-4.1.1-1.el7.x86_64.rpm
+rpm -i glusterfs-fuse-4.1.1-1.el7.x86_64.rpm
+
+#Build list of servers
+GFSSERVER=$((1 + RANDOM % 7 ))
+backupNodes="${GLUSTERHOSTPREFIX}${GLUSTERHOSTCOUNT}"
+index=1
+while [ $index -lt ${GLUSTERHOSTCOUNT} ] ; do
+    if [ ${index} -ne ${GFSSERVER} ];
+        then
+        backupNodes="${backupNodes}:${GLUSTERHOSTPREFIX}${index}"
+    fi
+    let index++
+done
+
+# Mount the file system and add the /etc/fstab setting
+
+mount -t glusterfs -o backup-volfile-servers=${backupNodes} ${GLUSTERHOSTPREFIX}${GLUSTERHOSTCOUNT}:/${GLUSTERVOLUME} ${MOUNTPOINT}
+
+LINE="${GLUSTERHOSTPREFIX}${GLUSTERHOSTCOUNT}:/${GLUSTERVOLUME} ${MOUNTPOINT} glusterfs defaults,backup-volfile-servers=${backupNodes} 0 0"    
+echo -e "${LINE}" >> /etc/fstab
+
+# Install performance test tools
+
+yum -y install gcc gcc-gfortran gcc-c++
+mkdir /glustre/software
+cd /glustre/software/
+wget http://www.mpich.org/static/downloads/3.1.4/mpich-3.1.4.tar.gz
+tar xzf mpich-3.1.4.tar.gz
+cd mpich-3.1.4
+./configure --prefix=/glustre/software/mpich3/
+make
+make install 
+
+# Update environment variables
+
+export PATH=/glustre/software/mpich3/bin:$PATH
+export LD_LIBRARY_PATH=/glustre/software/mpich3/lib:${LD_LIBRARY_PATH}
+
+# Compile IOR
+
+cd /glustre/software/
+yum -y install git automake
+git clone https://github.com/chaos/ior.git
+mv ior ior_src
+cd ior_src/
+./bootstrap
+./configure --prefix=/glustre/software/ior/
+make
+make install
+
+# Compile and install MDTest
+
+cd /glustre/software/
+git clone https://github.com/MDTEST-LANL/mdtest.git
+cd mdtest/old
+export MPI_CC=mpicc
+make
+
+yum -y install epel-release
+yum -y install bonnie++
+
+wget http://www.iozone.org/src/current/iozone-3-482.i386.rpm
+yum -y install iozone-3-482.i386.rpm
+
