@@ -30,10 +30,10 @@
     },
     "masterImage": {
       "type": "string",
-      "defaultValue": "CentOS_7.2",
+      "defaultValue": "CentOS_7.7",
       "allowedValues": [
         "CentOS_6.7",
-        "CentOS_7.2",
+        "CentOS_7.7",
         "RHEL_7.2"
       ],
       "metadata": {
@@ -42,12 +42,13 @@
     },
     "CompNodeVMsku": {
       "type": "string",
-      "defaultValue": "Standard_H16r",
+      "defaultValue": "Standard_HC44rs",
       "allowedValues": [
         "Standard_A8",
         "Standard_A9",
         "Standard_H16r",
-        "Standard_H16mr"
+        "Standard_H16mr",
+        "Standard_HC44rs"
       ],
       "metadata": {
         "description": "Instance type to use for the compute nodes"
@@ -55,11 +56,11 @@
     },
     "computeNodeImage": {
       "type": "string",
-      "defaultValue": "CentOS-HPC_7.1",
+      "defaultValue": "CentOS-HPC_7.7",
       "allowedValues": [
         "CentOS_6.7",
         "CentOS_7.2",
-        "CentOS-HPC_7.1",
+        "CentOS-HPC_7.7",
         "RHEL_7.2"
       ],
       "metadata": {
@@ -175,10 +176,10 @@
         "sku": "7.2",
         "version": "latest"
       },
-      "CentOS-HPC_7.1": {
+      "CentOS-HPC_7.7": {
         "publisher": "OpenLogic",
         "offer": "CentOS-HPC",
-        "sku": "7.1",
+        "sku": "7.7",
         "version": "latest"
       },
       "RHEL_7.2": {
